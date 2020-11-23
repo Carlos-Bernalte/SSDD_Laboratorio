@@ -1,6 +1,6 @@
 module IceGauntlet{
 
-    interface Authenticaction {
+    interface Authentication {
         void changePassword(string user, string currentPassHash, string newPassHash);
         string getNewToken(string user, string passwordHash);
         bool isValid(string token);        

@@ -3,7 +3,7 @@
 
 import sys
 import Ice
-Ice.loadSlice('Slice.ice')
+Ice.loadSlice('SliceGauntlet.ice')
 import IceGauntlet
 
 class Client(Ice.Application):
@@ -15,20 +15,22 @@ class Client(Ice.Application):
 
     def publishMap(self):
         print()
-        while(true):
+        while(True):
             try:
-                new_room=open("client_maps/"+input(), "r")
+                new_room=open("client_maps/"+input("Escribe el nombre del mapa: "), "r")
                 break
                 
             except FileNotFoundError:
                 print("Archivo no encontrado")
 
-        self.room.publish(new_room)
+        self.room.publish("Y1DCNNnejzBBPamkmHpRIKYUNm8ZXzeR6rXpzBPQ",new_room.read())
+        new_room.close()
 
     def removeMap():
         print()
 
     def run(self, argv):
+        print(">>>>>>>>>>>>>>>>>>>>>>>>>",argv[1])
         proxy = self.communicator().stringToProxy(argv[1])
         self.room = IceGauntlet.RoomPrx.checkedCast(proxy)
 
@@ -53,6 +55,5 @@ class Client(Ice.Application):
         print("Adiós.")
         
         return 0
-
-
+        
 sys.exit(Client().main(sys.argv))

@@ -1,7 +1,7 @@
 from os import name
 import sys
 import Ice
-Ice.loadSlice('Slice.ice')
+Ice.loadSlice('SliceGauntlet.ice')
 import IceGauntlet
 
 
@@ -12,9 +12,10 @@ class RoomI(IceGauntlet.Room):
         level= open("server_maps/my_map.json", mode='r', encoding='utf-8')
         return level.read()
 
-    def pusblish(self, token, new_room):
+    def publish(self,token, new_room, current=None):
         archivo = open("server_maps/mapa_nuevo.json","w")
-        archivo.write(self.new_room)
+        archivo.write(new_room)
+        print("Mapa publicado")
         archivo.close()
 
 class Server(Ice.Application):

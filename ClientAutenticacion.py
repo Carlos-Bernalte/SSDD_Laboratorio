@@ -15,7 +15,7 @@ class Client(Ice.Application):
             valido = authentication.isValid(argv[2])
             print(valido)
         else:
-            print("Introduce: 1-Change password 2-Get new token") 
+            print("Introduce: \n  [1] Change password. \n  [2] Get new token") 
             option = input()
             if  option == "1" :
                 print("Introduce el usuario") 
