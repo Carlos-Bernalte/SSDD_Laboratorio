@@ -12,11 +12,18 @@ class Client(Ice.Application):
         archivo = open("client_maps/mapa_descargado.json","w")
         archivo.write(self.room.getRoom())
         archivo.close()
+
     def publishMap(self):
-        try:
-            mi_mapa=open("client_maps/"+input(), "r")
-        
-        mi_mapa.read()
+        print()
+        while(true):
+            try:
+                new_room=open("client_maps/"+input(), "r")
+                break
+                
+            except FileNotFoundError:
+                print("Archivo no encontrado")
+
+        self.room.publish(new_room)
 
     def removeMap():
         print()
