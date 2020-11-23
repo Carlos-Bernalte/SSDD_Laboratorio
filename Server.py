@@ -10,7 +10,6 @@ class RoomI(IceGauntlet.Room):
 
     def getRoom(self, current=None):
         level= open("server_maps/my_map.json", mode='r', encoding='utf-8')
-        print("-----------------------------------------------------")
         return level.read()
 
 class Server(Ice.Application):
