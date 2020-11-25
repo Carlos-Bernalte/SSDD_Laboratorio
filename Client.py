@@ -26,8 +26,10 @@ class Client(Ice.Application):
         self.room.publish("Y1DCNNnejzBBPamkmHpRIKYUNm8ZXzeR6rXpzBPQ",new_room.read())
         new_room.close()
 
-    def removeMap():
+    def removeMap(self):
         print()
+        room_name=input("Escribe el nombre del mapa que desees eliminar: ")        
+        self.room.remove("Y1DCNNnejzBBPamkmHpRIKYUNm8ZXzeR6rXpzBPQ",room_name)
 
     def run(self, argv):
         print(">>>>>>>>>>>>>>>>>>>>>>>>>",argv[1])

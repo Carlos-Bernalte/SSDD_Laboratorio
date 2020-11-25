@@ -1,4 +1,6 @@
 from os import name
+from os import remove
+import os
 import sys
 import Ice
 Ice.loadSlice('SliceGauntlet.ice')
@@ -17,6 +19,10 @@ class RoomI(IceGauntlet.Room):
         archivo.write(new_room)
         print("Mapa publicado")
         archivo.close()
+
+    def remove(self,token, room_name, current=None):
+        remove(os.path.join("{0}/server_maps/{1}".format(os.getcwd(), room_name)))
+
 
 class Server(Ice.Application):
     def run(self, argv):
