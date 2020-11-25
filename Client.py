@@ -4,6 +4,7 @@
 import sys
 import Ice
 Ice.loadSlice('SliceGauntlet.ice')
+Ice.loadSlice('icegauntlet.ice')
 import IceGauntlet
 
 class Client(Ice.Application):
