@@ -3,8 +3,8 @@
 
 import sys
 import Ice
-Ice.loadSlice('SliceGauntlet.ice')
-import IceGauntlet
+Ice.loadSlice('icegauntlet.ice')
+import IceGauntlet 
 
 class Client(Ice.Application):
     def run(self, argv):
@@ -15,23 +15,31 @@ class Client(Ice.Application):
             valido = authentication.isValid(argv[2])
             print(valido)
         else:
-            print("Introduce: \n  [1] Change password. \n  [2] Get new token") 
+            print("Introduce: 1-Change password 2-Get new token") 
             option = input()
             if  option == "1" :
                 print("Introduce el usuario") 
                 user = input()
                 print("Introduce la contraseña actual")
                 currentPass = input()
-                print("Introduce la nueva contraseña")
+                print("Introduce la nueva contraseña")                    
                 newPass = input()
-                authentication.changePassword(user, currentPass, newPass)
+                try:
+                    authentication.changePassword(user, currentPass, newPass)
+                except IceGauntlet.Unauthorized:
+                    print("\nERROR,Contraseña o usurio incorrectos")   
+
             if option == "2" :
                 print("Introduce el usuario") 
                 user = input()
-                print("Introduce la contraseña")
+                print("Introduce la contraseña")                
                 currentPass = input()
-                token = authentication.getNewToken(user, currentPass)
-                print(token)            
+                try:
+                    token = authentication.getNewToken(user, currentPass)
+                    print(token)     
+                except IceGauntlet.Unauthorized:
+                    print("\nERROR,Contraseña o ususario incorrectos") 
+             
         
 sys.exit(Client().main(sys.argv))
 
