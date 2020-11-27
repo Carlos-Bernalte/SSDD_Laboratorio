@@ -13,7 +13,6 @@ module IceGauntlet{
     interface Room {
         void publish(string token, string roomData) throws RoomAlreadyExists;
         void remove(string token, string roomName) throws RoomNotExists;
-        string getRoom();
     };
    
     interface GameService {
