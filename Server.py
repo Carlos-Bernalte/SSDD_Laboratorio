@@ -1,9 +1,11 @@
 from os import name
 from os import remove
 import os
+import json
+import random
 import sys
 import Ice
-Ice.loadSlice('SliceGauntlet.ice')
+Ice.loadSlice('icegauntlet.ice')
 import IceGauntlet
 
 
@@ -17,18 +19,32 @@ class RoomI(IceGauntlet.Room):
             raise RuntimeError('Invalid proxy for authentification server')
 
     def getRoom(self, current=None):
-        level= open("server_maps/my_map.json", mode='r', encoding='utf-8')
+        maps = os.listdir("server_maps/")
+        index = random.randrange(0, len(maps))
+        level= open("server_maps/"+maps[index], mode='r', encoding='utf-8')
         return level.read()
 
     def publish(self,token, new_room, current=None):
         
         if self.auth_server.isValid(token):
-            archivo = open("server_maps/mapa_nuevo.json","w")
+            archivo = open("server_maps/mapa_nuevo.json", "w")
             archivo.write(new_room)
             print("Mapa publicado")
             archivo.close()
+
+            archivo = open("server_maps/mapa_nuevo.json")
+            archivojson = json.load(archivo)
+            namemap = archivojson['room']
+            os.rename("server_maps/mapa_nuevo.json","server_maps/{}.json".format(namemap))
+
+        
+            
+
+
+        
+
         else:
-            print("RoomAlreadyExists")
+            print("Autenticación incorrecta")
 
     def remove(self,token, room_name, current=None):
         if self.auth_server.isValid(token):

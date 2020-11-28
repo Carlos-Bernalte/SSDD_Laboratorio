@@ -2,8 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import sys
+import os
 import Ice
-Ice.loadSlice('SliceGauntlet.ice')
+import json
 Ice.loadSlice('icegauntlet.ice')
 import IceGauntlet
 
@@ -13,6 +14,12 @@ class Client(Ice.Application):
         archivo = open("client_maps/mapa_descargado.json","w")
         archivo.write(self.room.getRoom())
         archivo.close()
+
+        archivo = open("client_maps/mapa_descargado.json")
+        archivojson = json.load(archivo)
+        namemap = archivojson['room']
+        os.rename("client_maps/mapa_descargado.json","client_maps/{}.json".format(namemap))
+
 
     def publishMap(self):
         print()
@@ -36,7 +43,6 @@ class Client(Ice.Application):
         print(">>>>>>>>>>>>>>>>>>>>>>>>>",argv[1])
         proxy = self.communicator().stringToProxy(argv[1])
         self.room = IceGauntlet.RoomPrx.checkedCast(proxy)
-
         if not self.room:
             raise RuntimeError('Invalid proxy')
         
