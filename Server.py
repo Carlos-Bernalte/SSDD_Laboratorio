@@ -1,11 +1,15 @@
 from os import name
 from os import remove
 import os
+import json
+import random
 import sys
 import Ice
-Ice.loadSlice('SliceGauntlet.ice')
+Ice.loadSlice('icegauntlet.ice')
 import IceGauntlet
 
+data = {}
+data['Authors'] = []
 
 class RoomI(IceGauntlet.Room):
     n = 0
@@ -17,18 +21,57 @@ class RoomI(IceGauntlet.Room):
             raise RuntimeError('Invalid proxy for authentification server')
 
     def getRoom(self, current=None):
-        level= open("server_maps/my_map.json", mode='r', encoding='utf-8')
+        maps = os.listdir("server_maps/")
+        index = random.randrange(0, len(maps))
+        level= open("server_maps/"+maps[index], mode='r', encoding='utf-8')
         return level.read()
 
     def publish(self,token, new_room, current=None):
         
         if self.auth_server.isValid(token):
-            archivo = open("server_maps/mapa_nuevo.json","w")
+            archivo = open("server_maps/mapa_nuevo.json", "w")
             archivo.write(new_room)
             print("Mapa publicado")
             archivo.close()
+
+            archivo = open("server_maps/mapa_nuevo.json")
+            archivojson = json.load(archivo)
+            namemap = archivojson['room']
+            os.rename("server_maps/mapa_nuevo.json","server_maps/{}.json".format(namemap))
+            archivo.close
+
+            maps = []
+            #data['Authors'] = []
+            with open("Authors_Maps.json", 'w') as file:
+                json.dump(data, file)
+                #archivo = json.load(file)
+                #authors = archivo['Authors']
+                #archivo = file.read()
+                """if (os.stat("Authors_Maps.json").st_size == 0):
+                    maps.append(namemap)
+                    data['Authors'].append({'Token': token, 'Maps': maps})
+                    json.dump(data, file)
+                else:"""
+                archivo = json.load(file)
+                authors = archivo['Authors']
+                for i in range(0,len(authors)):
+                    if authors[i]['Token'] == token: 
+                        data['Authors'][i]['Maps'].append(namemap)
+                        json.dump(data, file)
+                    else:
+                        maps.append(namemap)
+                        data['Authors'].append({'Token': token, 'Maps': maps})                            json.dump(data, file)
+            print("salgo")                
+            
+
+            """ maps.append(namemap)
+            data = {'Token': token,'Maps': maps}
+            with open('Authors_Maps.json','a') as file:          
+             json.dump(data, file)"""
+
+
         else:
-            print("RoomAlreadyExists")
+            print("Autenticación incorrecta")
 
     def remove(self,token, room_name, current=None):
         if self.auth_server.isValid(token):
