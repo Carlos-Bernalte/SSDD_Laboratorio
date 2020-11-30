@@ -17,13 +17,13 @@ import logging
 import os.path
 
 import Ice
-Ice.loadSlice('SliceGauntlet.ice')
+Ice.loadSlice('icegauntlet.ice')
 # pylint: disable=E0401
 # pylint: disable=C0413
 import IceGauntlet
 
 
-USERS_FILE = 'users.json'
+USERS_FILE = 'Servers/users.json'
 PASSWORD_HASH = 'password_hash'
 CURRENT_TOKEN = 'current_token'
 TOKEN_SIZE = 40

@@ -9,7 +9,7 @@ Ice.loadSlice('icegauntlet.ice')
 import IceGauntlet
 
 
-class RoomI(IceGauntlet.Room):
+class RoomManagment(IceGauntlet.Room):
     n = 0
     def __init__(self, proxy_auth_server):
         
@@ -18,11 +18,6 @@ class RoomI(IceGauntlet.Room):
         if not self.auth_server:
             raise RuntimeError('Invalid proxy for authentification server')
 
-    def getRoom(self, current=None):
-        maps = os.listdir("server_maps/")
-        index = random.randrange(0, len(maps))
-        level= open("server_maps/"+maps[index], mode='r', encoding='utf-8')
-        return level.read()
 
     def publish(self,token, new_room, current=None):
         
@@ -46,19 +41,40 @@ class RoomI(IceGauntlet.Room):
         else:
             print("No puedes")
 
+class GameService(IceGauntlet.GameService):
+    def getRoom(self, current=None):
+        maps = os.listdir("server_maps/")
+        index = random.randrange(0, len(maps))
+        level= open("server_maps/"+maps[index], mode='r', encoding='utf-8')
+
+        return level.read()
+
 
 class Server(Ice.Application):
     def run(self, argv):
         broker = self.communicator()
 
-        servant = RoomI(self.communicator().stringToProxy(argv[1]))
+        servantRM = RoomManagment(self.communicator().stringToProxy(argv[1]))
+        servantGS = GameService(self.comunicator().stringToProxy(argv[1]))
 
-        adapter = broker.createObjectAdapter("ServerAdapter")
-        proxy = adapter.add(servant, broker.stringToIdentity("room1"))
+        adapterRM = broker.createObjectAdapter("ServerAdapterRM")
+        adapterGS = broker.createObjectAdapter("ServerAdapterGS")
 
-        print(proxy, flush=True)
+        proxyRM = adapterRM.add(servantRM, broker.stringToIdentity("roomRM"))
+        proxyGS = adapterGS.add(servantGS, broker.stringToIdentity("roomGS"))
 
-        adapter.activate()
+        fileProxyRM = open("Servers/ProxyRM.txt,", "w")
+        fileProxyGS = open("Servers/ProxyGS.txt,", "w")
+
+        fileProxyRM.write(proxyRM)
+        fileProxyGS.write(proxyGS)
+
+        fileProxyRM.close()
+        fileProxyGS.close()
+
+        adapterRM.activate()
+        adapterGS.activate()
+
         self.shutdownOnInterrupt()
         broker.waitForShutdown()
 

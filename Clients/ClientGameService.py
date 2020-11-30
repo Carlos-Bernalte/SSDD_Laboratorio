@@ -19,7 +19,7 @@ class Client(Ice.Application):
         
         roomData=self.room.getRoom()
         roomDataJson = json.load(roomData)
-        archivo = open("client_maps/"+str(roomDataJson['room']),"w")
+        archivo = open("iceguantlet/assets/"+str(roomDataJson['room']),"w")
         archivo.write(roomData)
         archivo.close()
         

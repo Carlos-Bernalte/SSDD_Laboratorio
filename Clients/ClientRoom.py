@@ -10,59 +10,41 @@ import IceGauntlet
 
 class Client(Ice.Application):
     
-    def getMap(self):
-        archivo = open("client_maps/mapa_descargado.json","w")
-        archivo.write(self.room.getRoom())
-        archivo.close()
+    def publishMap(self, token="", map_name=""):
 
-        archivo = open("client_maps/mapa_descargado.json")
-        archivojson = json.load(archivo)
-        namemap = archivojson['room']
-        os.rename("client_maps/mapa_descargado.json","client_maps/{}.json".format(namemap))
+        try:
+            new_room=open("iceguantlet/assets/"+map_name, "r")
+            self.room.publish(token,new_room.read())
+            new_room.close()
+            
+        except FileNotFoundError:
+            print("Archivo no encontrado en el directo")
 
+        
 
-    def publishMap(self):
-        print()
-        while(True):
-            try:
-                new_room=open("client_maps/"+input("Escribe el nombre del mapa: "), "r")
-                break
-                
-            except FileNotFoundError:
-                print("Archivo no encontrado")
+    def removeMap(self, token="", map_name=""):
 
-        self.room.publish("Y1DCNNnejzBBPamkmHpRIKYUNm8ZXzeR6rXpzBPQ",new_room.read())
-        new_room.close()
-
-    def removeMap(self):
-        print()
         room_name=input("Escribe el nombre del mapa que desees eliminar: ")        
-        self.room.remove("Y1DCNNnejzBBPamkmHpRIKYUNm8ZXzeR6rXpzBPQ",room_name)
+        self.room.remove(token,room_name)
 
     def run(self, argv):
-        print(">>>>>>>>>>>>>>>>>>>>>>>>>",argv[1])
+        if len(argv) == 4:
+            if argv[2]=="-p":
+                self.publish(argv[3],argv[4])
+            elif argv[2]=="-r":
+                self.removeMap(argv[3],argv[4])
+            else:
+                print("Opción no disponible.")
+                return 1
+        
+        print(argv[1])
         proxy = self.communicator().stringToProxy(argv[1])
         self.room = IceGauntlet.RoomPrx.checkedCast(proxy)
         if not self.room:
             raise RuntimeError('Invalid proxy')
-        
-        option=-1
-        while option <0 or option>5:
-            try:
-                print("Elige una opción: \n  [1] Obtener un mapa. \n  [2] Subir mapa. \n  [3] Borrar un mapa. \n  [0] Salir")
-                option=int(input())
-            except ValueError:
-                print("Tiene que ser un numero")
 
-        if option==1:
-            self.getMap()
-        elif option==2:
-            self.publishMap()
-        elif option==3:
-            self.removeMap()
-
-        print("Adiós.")
-        
         return 0
+        
+
         
 sys.exit(Client().main(sys.argv))
