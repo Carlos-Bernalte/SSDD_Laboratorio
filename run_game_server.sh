@@ -1,0 +1,2 @@
+#run_game_server:  si  se  decide  implementar  el  servicio  de  juego  en  un  servidor independiente al servicio de mapas, se deberá aportar también este script. No recibirá argumentos y no deberá finalizar hasta que no se pare el servicio.
+python3 Clients/ClientGameService.py

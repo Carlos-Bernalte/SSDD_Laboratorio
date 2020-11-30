@@ -11,9 +11,17 @@ import IceGauntlet
 class Client(Ice.Application):
 
     def run(self, argv):
-        print(argv[1])
-        proxy = self.communicator().stringToProxy(argv[1])
+        server_proxy=None
+        try:
+            server_proxy=open("proxys/ProxyGS.out", "r")
+        except FileNotFoundError:
+            print("No se encuentra el proxy del servidor.")
+        prox=server_proxy.read()
+        print(prox)
+        proxy = self.communicator().stringToProxy(prox)
+        
         self.room = IceGauntlet.RoomPrx.checkedCast(proxy)
+        print(">>> "+str(self.room))
         if not self.room:
             raise RuntimeError('Invalid proxy')
         

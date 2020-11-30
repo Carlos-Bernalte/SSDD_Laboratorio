@@ -1,4 +1,4 @@
-from os import name
+from os import name, read
 from os import remove
 import os
 import json
@@ -42,6 +42,14 @@ class RoomManagment(IceGauntlet.Room):
             print("No puedes")
 
 class GameService(IceGauntlet.GameService):
+
+    def __init__(self, proxy_auth_server):
+        
+        self.auth_server = IceGauntlet.AuthenticationPrx.checkedCast(proxy_auth_server)
+
+        if not self.auth_server:
+            raise RuntimeError('Invalid proxy for authentification server')
+
     def getRoom(self, current=None):
         maps = os.listdir("server_maps/")
         index = random.randrange(0, len(maps))
@@ -53,9 +61,15 @@ class GameService(IceGauntlet.GameService):
 class Server(Ice.Application):
     def run(self, argv):
         broker = self.communicator()
+        auth_server_proxy=None
+        try:
+            auth_server_proxy=open("proxys/auth_server-proxy.out", "r")
+        except FileNotFoundError:
+            print("No se encuentra el proxy del servidor de autentificación.")
 
-        servantRM = RoomManagment(self.communicator().stringToProxy(argv[1]))
-        servantGS = GameService(self.comunicator().stringToProxy(argv[1]))
+        prox=auth_server_proxy.read()
+        servantRM = RoomManagment(self.communicator().stringToProxy(prox))
+        servantGS = GameService(self.communicator().stringToProxy(prox))
 
         adapterRM = broker.createObjectAdapter("ServerAdapterRM")
         adapterGS = broker.createObjectAdapter("ServerAdapterGS")
@@ -63,14 +77,17 @@ class Server(Ice.Application):
         proxyRM = adapterRM.add(servantRM, broker.stringToIdentity("roomRM"))
         proxyGS = adapterGS.add(servantGS, broker.stringToIdentity("roomGS"))
 
-        fileProxyRM = open("Servers/ProxyRM.txt,", "w")
-        fileProxyGS = open("Servers/ProxyGS.txt,", "w")
+        fileProxyRM = open("proxys/ProxyRM.out", "w")
+        fileProxyGS = open("proxys/ProxyGS.out", "w")
 
-        fileProxyRM.write(proxyRM)
-        fileProxyGS.write(proxyGS)
+        fileProxyRM.write(str(proxyRM))
+        fileProxyGS.write(str(proxyGS))
 
         fileProxyRM.close()
         fileProxyGS.close()
+
+        print("Proxy Room Managment: "+str(proxyRM))
+        print("Proxy Game Service: "+str(proxyGS))
 
         adapterRM.activate()
         adapterGS.activate()

@@ -22,10 +22,8 @@ class Client(Ice.Application):
 
         
 
-    def removeMap(self, token="", map_name=""):
-
-        room_name=input("Escribe el nombre del mapa que desees eliminar: ")        
-        self.room.remove(token,room_name)
+    def removeMap(self, token="", map_name=""):   
+        self.room.remove(token,map_name)
 
     def run(self, argv):
         if len(argv) == 4:
