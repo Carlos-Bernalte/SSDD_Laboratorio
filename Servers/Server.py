@@ -37,12 +37,6 @@ class RoomI(IceGauntlet.Room):
             namemap = archivojson['room']
             os.rename("server_maps/mapa_nuevo.json","server_maps/{}.json".format(namemap))
 
-        
-            
-
-
-        
-
         else:
             print("Autenticación incorrecta")
 
