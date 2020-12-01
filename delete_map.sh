@@ -1,1 +1,1 @@
-python3 Clients/ClientRoom.py "$(shell cat Servers/server-proxy.out)" -r $2 $3
+python3 Clients/ClientRoomManagment.py -r $1 $2

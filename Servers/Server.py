@@ -1,4 +1,4 @@
-from os import name, read
+from os import name, read, removedirs
 from os import remove
 import os
 import json
@@ -19,25 +19,20 @@ class RoomManagment(IceGauntlet.Room):
             raise RuntimeError('Invalid proxy for authentification server')
 
 
-    def publish(self,token, new_room, current=None):
-        
-        if self.auth_server.isValid(token):
-            archivo = open("server_maps/mapa_nuevo.json", "w")
-            archivo.write(new_room)
-            print("Mapa publicado")
-            archivo.close()
+    def publish(self,token, data_room, current=None):
 
-            archivo = open("server_maps/mapa_nuevo.json")
-            archivojson = json.load(archivo)
-            namemap = archivojson['room']
-            os.rename("server_maps/mapa_nuevo.json","server_maps/{}.json".format(namemap))
+        if self.auth_server.isValid(token):
+
+            archivo = open("server_maps/"+str(json.load(data_room)["room"]), "w")
+            archivo.write(data_room)
+            archivo.close()
 
         else:
             print("Autenticación incorrecta")
 
     def remove(self,token, room_name, current=None):
         if self.auth_server.isValid(token):
-            remove(os.path.join("{0}/server_maps/{1}".format(os.getcwd(), room_name)))
+            remove("server_maps/"+str(room_name))
         else:
             print("No puedes")
 
@@ -51,6 +46,7 @@ class GameService(IceGauntlet.GameService):
             raise RuntimeError('Invalid proxy for authentification server')
 
     def getRoom(self, current=None):
+        print("hola")
         maps = os.listdir("server_maps/")
         index = random.randrange(0, len(maps))
         level= open("server_maps/"+maps[index], mode='r', encoding='utf-8')
@@ -68,34 +64,32 @@ class Server(Ice.Application):
             print("No se encuentra el proxy del servidor de autentificación.")
 
         prox=auth_server_proxy.read()
-        servantRM = RoomManagment(self.communicator().stringToProxy(prox))
-        servantGS = GameService(self.communicator().stringToProxy(prox))
-
+        
         adapterRM = broker.createObjectAdapter("ServerAdapterRM")
-        adapterGS = broker.createObjectAdapter("ServerAdapterGS")
-
+        servantRM = RoomManagment(self.communicator().stringToProxy(prox))
         proxyRM = adapterRM.add(servantRM, broker.stringToIdentity("roomRM"))
-        proxyGS = adapterGS.add(servantGS, broker.stringToIdentity("roomGS"))
-
-        fileProxyRM = open("proxys/ProxyRM.out", "w")
-        fileProxyGS = open("proxys/ProxyGS.out", "w")
-
-        fileProxyRM.write(str(proxyRM))
-        fileProxyGS.write(str(proxyGS))
-
-        fileProxyRM.close()
-        fileProxyGS.close()
-
-        print("Proxy Room Managment: "+str(proxyRM))
-        print("Proxy Game Service: "+str(proxyGS))
-
         adapterRM.activate()
+
+        self.saveProxy(proxyRM, "ProxyRM.out")
+
+        
+        servantGS = GameService(self.communicator().stringToProxy(prox))
+        adapterGS = broker.createObjectAdapter("ServerAdapterGS")
+        proxyGS = adapterGS.add(servantGS, broker.stringToIdentity("roomGS"))
         adapterGS.activate()
 
+        self.saveProxy(proxyGS, "ProxyGS.out")
+        
+        
         self.shutdownOnInterrupt()
         broker.waitForShutdown()
 
         return 0
+    def saveProxy(self, proxy, fileName=""):
+        fileProxyGS = open("proxys/"+fileName, "w")
+        fileProxyGS.write(str(proxy))
+        fileProxyGS.close()
+        print("Proxy Game Service: "+str(proxy))
 
 
 server = Server()

@@ -4,7 +4,6 @@
 import sys
 import os
 import Ice
-import json
 Ice.loadSlice('icegauntlet.ice')
 import IceGauntlet
 
@@ -13,7 +12,7 @@ class Client(Ice.Application):
     def publishMap(self, token="", map_name=""):
 
         try:
-            new_room=open("iceguantlet/assets/"+map_name, "r")
+            new_room=open("server_maps/"+map_name, "r")
             self.room.publish(token,new_room.read())
             new_room.close()
             
@@ -26,21 +25,27 @@ class Client(Ice.Application):
         self.room.remove(token,map_name)
 
     def run(self, argv):
-        if len(argv) == 4:
-            if argv[2]=="-p":
-                self.publish(argv[3],argv[4])
-            elif argv[2]=="-r":
-                self.removeMap(argv[3],argv[4])
-            else:
-                print("Opción no disponible.")
-                return 1
-        
-        print(argv[1])
-        proxy = self.communicator().stringToProxy(argv[1])
+        server_proxy=""
+        try:
+            with open("proxys/ProxyRM.out") as proxyString:
+                server_proxy=proxyString.read()
+        except FileNotFoundError:
+            print("No se encuentra el proxy del servidor.")
+
+        proxy = self.communicator().stringToProxy(server_proxy)
         self.room = IceGauntlet.RoomPrx.checkedCast(proxy)
         if not self.room:
             raise RuntimeError('Invalid proxy')
 
+        if len(argv) == 4:
+            if argv[1]=="-p":
+                self.publishMap(argv[2],argv[3])
+            elif argv[1]=="-r":
+                self.removeMap(argv[2],argv[3])
+            else:
+                print("Opción no disponible.")
+                return 1
+        
         return 0
         
 
