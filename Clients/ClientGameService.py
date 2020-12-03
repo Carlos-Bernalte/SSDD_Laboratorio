@@ -9,28 +9,47 @@ Ice.loadSlice('icegauntlet.ice')
 import IceGauntlet
 
 class Client(Ice.Application):
-
-    def run(self, argv):
-        server_proxy=None
+    
+    def __init__(self):
+        server_proxy=""
         try:
-            server_proxy=open("proxys/ProxyGS.out", "r")
+            with open("proxys/ProxyGS.out") as proxyString:
+                server_proxy=proxyString.read()
         except FileNotFoundError:
             print("No se encuentra el proxy del servidor.")
-        prox=server_proxy.read()
-        print(prox)
-        proxy = self.communicator().stringToProxy(prox)
-        
-        self.room = IceGauntlet.RoomPrx.checkedCast(proxy)
-        print(">>> "+str(self.room))
-        if not self.room:
+
+        proxy = self.communicator().stringToProxy(server_proxy)
+        print(">>>: "+str(proxy))
+        self.game = IceGauntlet.GameServicePrx.checkedCast(proxy)
+        if not self.game:
             raise RuntimeError('Invalid proxy')
         
-        roomData=self.room.getRoom()
-        roomDataJson = json.load(roomData)
-        archivo = open("iceguantlet/assets/"+str(roomDataJson['room']),"w")
+        roomData=self.game.getRoom()
+        #roomDataJson = json.load(roomData)["room"]
+        archivo = open("icegauntlet/assets/map","w")
+        archivo.write(roomData)
+        archivo.close()
+        """
+    def run(self, argv):
+        server_proxy=""
+        try:
+            with open("proxys/ProxyGS.out") as proxyString:
+                server_proxy=proxyString.read()
+        except FileNotFoundError:
+            print("No se encuentra el proxy del servidor.")
+
+        proxy = self.communicator().stringToProxy(server_proxy)
+        print(">>>: "+str(proxy))
+        self.game = IceGauntlet.GameServicePrx.checkedCast(proxy)
+        if not self.game:
+            raise RuntimeError('Invalid proxy')
+
+        roomData=self.game.getRoom()
+        archivo = open("icegauntlet/assets/map.json","w")
         archivo.write(roomData)
         archivo.close()
         
         return 0
         
 sys.exit(Client().main(sys.argv))
+    """
