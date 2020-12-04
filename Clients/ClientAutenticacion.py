@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-
 import sys
 import Ice
+from getpass import getpass
 Ice.loadSlice('icegauntlet.ice')
 import IceGauntlet 
 
@@ -21,9 +21,9 @@ class Client(Ice.Application):
                 print("Introduce el usuario") 
                 user = input()
                 print("Introduce la contraseña actual")
-                currentPass = input()
+                currentPass = getpass()
                 print("Introduce la nueva contraseña")                    
-                newPass = input()
+                newPass = getpass()
                 try:
                     authentication.changePassword(user, currentPass, newPass)
                 except IceGauntlet.Unauthorized:
