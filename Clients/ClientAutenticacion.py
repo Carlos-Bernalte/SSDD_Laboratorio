@@ -22,23 +22,27 @@ class Client(Ice.Application):
                 user = input()
                 print("Introduce la contraseña actual")
                 currentPass = getpass()
+                currentPass = hashlib.sha256(currentPass.encode()).hexdigest()
+                print(currentPass)
                 print("Introduce la nueva contraseña")                    
                 newPass = getpass()
+                newPass = hashlib.sha256(newPass.encode()).hexdigest()
+                print(newPass)
                 try:
                     authentication.changePassword(user, currentPass, newPass)
                 except IceGauntlet.Unauthorized:
-                    print("\nERROR,Contraseña o usurio incorrectos")   
+                    print("\nERROR,Contraseña o usuario incorrectos")   
 
             if option == "2" :
                 print("Introduce el usuario") 
                 user = input()
                 print("Introduce la contraseña")                
-                currentPass = input()
+                currentPass = getpass()
                 try:
                     token = authentication.getNewToken(user, currentPass)
-                    print(token)     
+                    print("token: "+token)     
                 except IceGauntlet.Unauthorized:
-                    print("\nERROR,Contraseña o ususario incorrectos") 
+                    print("\nERROR,Contraseña o ususario incorrectos")
              
         
 sys.exit(Client().main(sys.argv))
