@@ -10,7 +10,9 @@ import sys
 import atexit
 import logging
 import argparse
-
+import Ice
+Ice.loadSlice('icegauntlet.ice')
+import IceGauntlet
 import game
 import game.common
 import game.screens
@@ -35,26 +37,26 @@ def bye(*args, **kwargs):
 def parse_commandline():
     '''Parse and check commandline'''
     parser = argparse.ArgumentParser('IceDungeon Local Game')
-    parser.add_argument('LEVEL', nargs='+', default=[DEFAULT_ROOM], help='List of levels')
-    parser.add_argument(
-        '-p', '--player', default=DEFAULT_HERO, choices=game.common.HEROES,
-        dest='hero', help='Hero to play with'
-    )
+    #parser.add_argument('LEVEL', nargs='+', default=[DEFAULT_ROOM], help='List of levels')
+    parser.add_argument('-p', '--player', default=DEFAULT_HERO, choices=game.common.HEROES, dest='hero', help='Hero to play with')
     options = parser.parse_args()
-
+    """
     for level_file in options.LEVEL:
         if not game.assets.search(level_file):
             logging.error(f'Level "{level_file}" not found!')
             return None
+    """
     return options
 
 
 def main():
     '''Start game according to commandline'''
+
     user_options = parse_commandline()
     if not user_options:
         return BAD_COMMAND_LINE
-    dungeonManager=game.game_service()
+        
+    dungeonManager=game.game_service.Client("dungeon1 -t -e 1.1:tcp -h 192.168.0.106 -p 9100 -t 60000")
     game.pyxeltools.initialize()
     dungeon = dungeonManager.next_map()
     gauntlet = game.Game(user_options.hero, dungeon)

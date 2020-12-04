@@ -36,7 +36,6 @@ class Client(Ice.Application):
                 server_proxy=proxyString.read()
         except FileNotFoundError:
             print("No se encuentra el proxy del servidor.")
-
         proxy = self.communicator().stringToProxy(server_proxy)
         print(">>>: "+str(proxy))
         self.game = IceGauntlet.DungeonPrx.checkedCast(proxy)

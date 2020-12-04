@@ -1,1 +1,1 @@
-./icegauntlet/dungeon_remote
+./icegauntlet/dungeon_client
