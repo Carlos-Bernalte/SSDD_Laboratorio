@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 # pylint: disable=W1203
 
@@ -16,7 +16,7 @@ import game.common
 import game.screens
 import game.pyxeltools
 import game.orchestration
-
+import game.game_service
 
 EXIT_OK = 0
 BAD_COMMAND_LINE = 1
@@ -54,9 +54,9 @@ def main():
     user_options = parse_commandline()
     if not user_options:
         return BAD_COMMAND_LINE
-
+    dungeonManager=game.game_service()
     game.pyxeltools.initialize()
-    dungeon = game.DungeonMap(user_options.LEVEL)
+    dungeon = dungeonManager.next_map()
     gauntlet = game.Game(user_options.hero, dungeon)
     gauntlet.add_state(game.screens.TileScreen, game.common.INITIAL_SCREEN)
     gauntlet.add_state(game.screens.StatsScreen, game.common.STATUS_SCREEN)

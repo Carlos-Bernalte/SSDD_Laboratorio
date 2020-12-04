@@ -9,7 +9,7 @@ Ice.loadSlice('icegauntlet.ice')
 import IceGauntlet
 
 
-class RoomManagment(IceGauntlet.Room):
+class RoomManagmentI(IceGauntlet.RoomManager):
     n = 0
     def __init__(self, proxy_auth_server):
         
@@ -19,11 +19,10 @@ class RoomManagment(IceGauntlet.Room):
             raise RuntimeError('Invalid proxy for authentification server')
 
 
-    def publish(self,token, roomData, current=None):
+    def publish(self,token, roomData="", current=None):
 
         if self.auth_server.isValid(token):
-
-            archivo = open("server_maps/"+str(json.load(roomData)["room"]), "w")
+            archivo = open("server_maps/"+json.loads(roomData)["room"], "w")
             archivo.write(roomData)
             archivo.close()
 
@@ -36,7 +35,7 @@ class RoomManagment(IceGauntlet.Room):
         else:
             print("No puedes")
 
-class GameService(IceGauntlet.GameService):
+class DungeonI(IceGauntlet.Dungeon):
 
     def __init__(self, proxy_auth_server):
         
@@ -50,7 +49,6 @@ class GameService(IceGauntlet.GameService):
         level= open("server_maps/"+maps[index], "r")
         data=level.read()
         level.close()
-        print(current)
         return data
 
 
@@ -66,16 +64,16 @@ class Server(Ice.Application):
         prox=auth_server_proxy.read()
         
         adapterGS = broker.createObjectAdapter("ServerAdapterGS")
-        servantGS = GameService(self.communicator().stringToProxy(prox))
-        proxyGS = adapterGS.add(servantGS, broker.stringToIdentity("roomGS"))
+        servantGS = DungeonI(self.communicator().stringToProxy(prox))
+        proxyGS = adapterGS.add(servantGS, broker.stringToIdentity("dungeon1"))
         #proxyGS = adapterGS.addWithUUID(servantGS)
         adapterGS.activate()
 
-        self.saveProxy(proxyGS, "ProxyGS.out")
+        self.saveProxy(proxyGS, "ProxyDungeon.out")
 
         adapterRM = broker.createObjectAdapter("ServerAdapterRM")
-        servantRM = RoomManagment(self.communicator().stringToProxy(prox))
-        proxyRM = adapterRM.add(servantRM, broker.stringToIdentity("roomRM"))
+        servantRM = RoomManagmentI(self.communicator().stringToProxy(prox))
+        proxyRM = adapterRM.add(servantRM, broker.stringToIdentity("roommanag1"))
         adapterRM.activate()
 
         self.saveProxy(proxyRM, "ProxyRM.out")

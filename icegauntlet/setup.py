@@ -45,7 +45,7 @@ setup(
     ],
     keywords='gaming development',
     packages=find_packages('./'),
-    scripts=['dungeon_local'],
+    scripts=['dungeon_client'],
     data_files=[(assets_destination, glob.glob('assets/*'))],
     include_package_data=True,
     zip_safe=False

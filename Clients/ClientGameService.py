@@ -9,7 +9,7 @@ Ice.loadSlice('icegauntlet.ice')
 import IceGauntlet
 
 class Client(Ice.Application):
-    
+    """
     def __init__(self):
         server_proxy=""
         try:
@@ -20,12 +20,11 @@ class Client(Ice.Application):
 
         proxy = self.communicator().stringToProxy(server_proxy)
         print(">>>: "+str(proxy))
-        self.game = IceGauntlet.GameServicePrx.checkedCast(proxy)
+        self.game = IceGauntlet.DungeonPrx.checkedCast(proxy)
         if not self.game:
             raise RuntimeError('Invalid proxy')
         
         roomData=self.game.getRoom()
-        #roomDataJson = json.load(roomData)["room"]
         archivo = open("icegauntlet/assets/map","w")
         archivo.write(roomData)
         archivo.close()
@@ -33,14 +32,14 @@ class Client(Ice.Application):
     def run(self, argv):
         server_proxy=""
         try:
-            with open("proxys/ProxyGS.out") as proxyString:
+            with open("proxys/ProxyDungeon.out") as proxyString:
                 server_proxy=proxyString.read()
         except FileNotFoundError:
             print("No se encuentra el proxy del servidor.")
 
         proxy = self.communicator().stringToProxy(server_proxy)
         print(">>>: "+str(proxy))
-        self.game = IceGauntlet.GameServicePrx.checkedCast(proxy)
+        self.game = IceGauntlet.DungeonPrx.checkedCast(proxy)
         if not self.game:
             raise RuntimeError('Invalid proxy')
 
@@ -52,4 +51,4 @@ class Client(Ice.Application):
         return 0
         
 sys.exit(Client().main(sys.argv))
-    """
+    

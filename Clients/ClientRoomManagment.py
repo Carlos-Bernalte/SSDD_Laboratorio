@@ -12,7 +12,7 @@ class Client(Ice.Application):
     def publishMap(self, token="", map_name=""):
 
         try:
-            new_room=open("server_maps/"+map_name, "r")
+            new_room=open("icegauntlet/editor/maps/"+map_name, "r")
             self.room.publish(token,new_room.read())
             new_room.close()
             
@@ -33,7 +33,7 @@ class Client(Ice.Application):
             print("No se encuentra el proxy del servidor.")
 
         proxy = self.communicator().stringToProxy(server_proxy)
-        self.room = IceGauntlet.RoomPrx.checkedCast(proxy)
+        self.room = IceGauntlet.RoomManagerPrx.checkedCast(proxy)
         if not self.room:
             raise RuntimeError('Invalid proxy')
 
