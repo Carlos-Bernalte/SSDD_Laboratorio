@@ -17,7 +17,7 @@ class Client(Ice.Application):
             new_room.close()
             
         except FileNotFoundError:
-            print("Archivo no encontrado en el directo")
+            print("Archivo no encontrado en el directorio 'Maps'")
 
         
 
