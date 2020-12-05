@@ -24,7 +24,7 @@ class Client(Ice.Application):
         if not self.game:
             raise RuntimeError('Invalid proxy')
         
-        roomData=self.game.getRoom()
+        roomData=self.game.get_room()
         archivo = open("icegauntlet/assets/map","w")
         archivo.write(roomData)
         archivo.close()
@@ -42,7 +42,7 @@ class Client(Ice.Application):
         if not self.game:
             raise RuntimeError('Invalid proxy')
 
-        roomData=self.game.getRoom()
+        roomData=self.game.get_room()
         archivo = open("icegauntlet/assets/map.json","w")
         archivo.write(roomData)
         archivo.close()
