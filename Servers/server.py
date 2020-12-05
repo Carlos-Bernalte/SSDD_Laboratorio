@@ -1,4 +1,4 @@
-""" El modulo Server.py, establece los sirvientes e imprime los proxys por pantalla
+""" El modulo server.py, establece los sirvientes e imprime los proxys por pantalla
 y los guarda en archivos .out. Tambien incorpora las clases y metodos necesarios para
 que el cliente pueda jugar un mapa, publicarlo y borrarlo (en caso de que dicho cliente
 sea su propietario)"""

@@ -1,34 +1,35 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-
+"""El modulo client_room_managment.py incorpora los metodos necesarios para
+publicar y borrar un mapa en el servidor"""
 import sys
-import os
 import Ice
 Ice.loadSlice('icegauntlet.ice')
 import IceGauntlet
 
 class Client(Ice.Application):
-    
-    def publishMap(self, token="", map_name=""):
-
+    """Se conecta con el servidor y contiene los métodos para publicar
+    y borrar un mapa del servidor"""
+    def publish_map(self, token="", map_name=""):
+        """Publica un mapa en el servidor"""
         try:
             new_room=open("icegauntlet/editor/maps/"+map_name, "r")
             self.room.publish(token,new_room.read())
             new_room.close()
-            
+
         except FileNotFoundError:
             print("Archivo no encontrado en el directorio 'Maps'")
 
-        
 
-    def removeMap(self, token="", map_name=""):   
+    def remove_map(self, token="", map_name=""):
+        """Elimina un mapa del servidor dado un nombre"""
         self.room.remove(token,map_name)
 
     def run(self, argv):
         server_proxy=""
         try:
-            with open("proxys/ProxyRM.out") as proxyString:
-                server_proxy=proxyString.read()
+            with open("proxys/ProxyRM.out") as proxy_string:
+                server_proxy=proxy_string.read()
         except FileNotFoundError:
             print("No se encuentra el proxy del servidor.")
 
@@ -39,15 +40,13 @@ class Client(Ice.Application):
 
         if len(argv) == 4:
             if argv[1]=="-p":
-                self.publishMap(argv[2],argv[3])
+                self.publish_map(argv[2],argv[3])
             elif argv[1]=="-r":
-                self.removeMap(argv[2],argv[3])
+                self.remove_map(argv[2],argv[3])
             else:
                 print("Opción no disponible.")
                 return 1
-        
-        return 0
-        
 
-        
+        return 0
+
 sys.exit(Client().main(sys.argv))
