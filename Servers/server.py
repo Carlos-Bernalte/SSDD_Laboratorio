@@ -13,7 +13,6 @@ import IceGauntlet
 
 class RoomManagmentI(IceGauntlet.RoomManager):
     """Incluye los métodos para publicar y eliminar un mapa"""
-    n = 0
     def __init__(self, proxy_auth_server):
 
         self.auth_server = IceGauntlet.AuthenticationPrx.checkedCast(proxy_auth_server)
@@ -48,7 +47,7 @@ class DungeonI(IceGauntlet.Dungeon):
         if not self.auth_server:
             raise RuntimeError('Invalid proxy for authentification server')
 
-    def get_room(self, current=None):
+    def getRoom(self, current=None):
         """Devuelve un mapa aleatorio"""
         maps = os.listdir("server_maps/")
         index = random.randrange(0, len(maps))
@@ -74,7 +73,6 @@ class Server(Ice.Application):
         adapter_gs = broker.createObjectAdapter("ServerAdapterGS")
         servant_gs = DungeonI(self.communicator().stringToProxy(prox))
         proxy_gs = adapter_gs.add(servant_gs, broker.stringToIdentity("dungeon1"))
-        #proxygs = adaptergs.addWithUUID(servantgs)
         adapter_gs.activate()
 
         self.save_proxy(proxy_gs, "ProxyDungeon.out")
