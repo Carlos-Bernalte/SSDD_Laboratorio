@@ -34,41 +34,34 @@ def bye(*args, **kwargs):
     print('Thanks for playing!')
 # pylint: enable=W0613
 
-def parse_commandline():
-    '''Parse and check commandline'''
+def parse_commandline(argv):
+    argv=argv[1:]
     parser = argparse.ArgumentParser('IceDungeon Local Game')
-    #parser.add_argument('LEVEL', nargs='+', default=[DEFAULT_ROOM], help='List of levels')
+    parser.add_argument('--proxy', help='Proxy for dungeons')
     parser.add_argument('-p', '--player', default=DEFAULT_HERO, choices=game.common.HEROES, dest='hero', help='Hero to play with')
     options = parser.parse_args()
-    """
-    for level_file in options.LEVEL:
-        if not game.assets.search(level_file):
-            logging.error(f'Level "{level_file}" not found!')
-            return None
-    """
     return options
 
 
-def main():
-    '''Start game according to commandline'''
+class Client(Ice.Application):
+    def run(self, argv):
+        user_options = parse_commandline(argv)
+        if not user_options:
+            return BAD_COMMAND_LINE
+            
+        dungeonManager=game.game_service.Client(self.communicator().stringToProxy("dungeon1 -t -e 1.1:tcp -h 192.168.0.106 -p 9100 -t 60000"))
+        game.pyxeltools.initialize()
+        dungeon = dungeonManager.next_room()
+        gauntlet = game.Game(user_options.hero, dungeon)
+        gauntlet.add_state(game.screens.TileScreen, game.common.INITIAL_SCREEN)
+        gauntlet.add_state(game.screens.StatsScreen, game.common.STATUS_SCREEN)
+        gauntlet.add_state(game.screens.GameScreen, game.common.GAME_SCREEN)
+        gauntlet.add_state(game.screens.GameOverScreen, game.common.GAME_OVER_SCREEN)
+        gauntlet.add_state(game.screens.GoodEndScreen, game.common.GOOD_END_SCREEN)
+        gauntlet.start()
 
-    user_options = parse_commandline()
-    if not user_options:
-        return BAD_COMMAND_LINE
-        
-    dungeonManager=game.game_service.Client("dungeon1 -t -e 1.1:tcp -h 192.168.0.106 -p 9100 -t 60000")
-    game.pyxeltools.initialize()
-    dungeon = dungeonManager.next_map()
-    gauntlet = game.Game(user_options.hero, dungeon)
-    gauntlet.add_state(game.screens.TileScreen, game.common.INITIAL_SCREEN)
-    gauntlet.add_state(game.screens.StatsScreen, game.common.STATUS_SCREEN)
-    gauntlet.add_state(game.screens.GameScreen, game.common.GAME_SCREEN)
-    gauntlet.add_state(game.screens.GameOverScreen, game.common.GAME_OVER_SCREEN)
-    gauntlet.add_state(game.screens.GoodEndScreen, game.common.GOOD_END_SCREEN)
-    gauntlet.start()
-
-    return EXIT_OK
+        return EXIT_OK
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    sys.exit(Client().main(sys.argv))

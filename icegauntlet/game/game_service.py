@@ -7,14 +7,12 @@ Ice.loadSlice('icegauntlet.ice')
 import IceGauntlet
 
 class Client(Ice.Application):
-    def __init__(self, proxy_string=""):
-        print(">>>>> ", proxy_string)
-        proxy = self.communicator().stringToProxy(proxy_string)
+    def __init__(self, proxy):
         self.game = IceGauntlet.DungeonPrx.checkedCast(proxy)
         if not self.game:
             raise RuntimeError('Invalid proxy')
         
     def next_room(self):
-        return self.game.getRoom()
+        return [self.game.getRoom()]
         
     
