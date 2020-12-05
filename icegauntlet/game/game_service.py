@@ -15,6 +15,6 @@ class Client(Ice.Application):
             raise RuntimeError('Invalid proxy')
         
     def next_room(self):
-        return self.game.getRoom()
+        return self.game.get_room()
         
     
