@@ -59,23 +59,6 @@ class PlayerData:
     def steer_id(self):
         return self.attribute['steer_id']
 
-
-class DungeonMap:
-    '''Store a list of rooms'''
-    def __init__(self, levels):
-        self._levels_ = levels
-        self._levels_.reverse()
-
-    @property
-    def next_room(self):
-        if self._levels_:
-            return self._levels_.pop()
-
-    @property
-    def finished(self):
-        return not self._levels_
-
-
 class Game:
     '''This class wraps the game loop created by pyxel'''
     def __init__(self, hero_class, dungeon):

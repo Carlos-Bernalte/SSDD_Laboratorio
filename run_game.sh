@@ -1,1 +1,1 @@
-./icegauntlet/dungeon_client
+./icegauntlet/dungeon_client --proxy "$@"

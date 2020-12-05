@@ -79,7 +79,10 @@ def initialize(title='IceDungeon'):
 
 def run(game_app):
     '''Start pyxel game loop'''
-    pyxel.run(game_app.update, game_app.render)
+    try:
+        pyxel.run(game_app.update, game_app.render)
+    except:
+        print("Game ended.")
 
 
 def tile(tile_id):
