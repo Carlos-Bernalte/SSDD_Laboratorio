@@ -5,6 +5,7 @@ cambiar contraseña y de obtener nuevo token para un usuario registrado."""
 import sys
 from getpass import getpass
 import Ice
+import hashlib
 Ice.loadSlice('icegauntlet.ice')
 import IceGauntlet
 
