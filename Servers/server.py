@@ -15,9 +15,9 @@ class RoomManagment(IceGauntlet.RoomManager):
     """Incluye los métodos necesarios para poder publicar y eliminar un mapa"""
 
     j = {"Autores":{}}
-    n = 0
-    with open("Servers/data.json", "w") as file:
-        json.dump(j,file)
+    if os.stat("Servers/data.json").st_size==0:
+        with open("Servers/data.json", "w") as file:
+                json.dump(j,file)
 
     def __init__(self, proxy_auth_server):
         self.auth_server = IceGauntlet.AuthenticationPrx.checkedCast(proxy_auth_server)
@@ -58,16 +58,15 @@ class RoomManagment(IceGauntlet.RoomManager):
 
         if not self.auth_server.isValid(token):
             raise IceGauntlet.Unauthorized
-
-        existe_level, existe_pertenece = self.autoria(token, json.loads(room_data)["room"])
-
-        print(existe_pertenece)
-
         try:
             json.loads(room_data)["data"]
             json.loads(room_data)["room"]
         except KeyError:
             raise IceGauntlet.WrongRoomFormat
+
+        existe_level, existe_pertenece = self.autoria(token, json.loads(room_data)["room"])
+
+        
         if (not existe_pertenece and not existe_level) or existe_pertenece:
             archivo = open("server_maps/"+str(json.loads(room_data)["room"]), "w")
             archivo.write(room_data)
@@ -139,7 +138,7 @@ class DungeonI(IceGauntlet.Dungeon):
         if not self.auth_server:
             raise RuntimeError('Invalid proxy for authentification server')
 
-    def get_room(self, current=None):
+    def getRoom(self, current=None):
         """Devuelve un mapa aleatorio"""
         maps = os.listdir("server_maps/")
         index = random.randrange(0, len(maps))
@@ -168,7 +167,6 @@ class Server(Ice.Application):
         adapter_gs = broker.createObjectAdapter("ServerAdapterGS")
         servant_gs = DungeonI(self.communicator().stringToProxy(prox))
         proxy_gs = adapter_gs.add(servant_gs, broker.stringToIdentity("dungeon1"))
-        #proxygs = adaptergs.addWithUUID(servantgs)
         adapter_gs.activate()
 
         self.save_proxy(proxy_gs, "ProxyDungeon.out")

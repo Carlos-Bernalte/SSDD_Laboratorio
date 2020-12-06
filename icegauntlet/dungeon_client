@@ -51,7 +51,6 @@ class Client(Ice.Application):
         if not user_options:
             return BAD_COMMAND_LINE
         game.pyxeltools.initialize()
-        print(user_options.proxy)
         dungeon = DungeonMap(self.communicator().stringToProxy(user_options.proxy))
         gauntlet = game.Game(user_options.hero, dungeon)
         gauntlet.add_state(game.screens.TileScreen, game.common.INITIAL_SCREEN)
@@ -75,5 +74,4 @@ class DungeonMap:
         return self.game.getRoom()
 
 if __name__ == '__main__':
-    print(sys.argv[1:])
     sys.exit(Client().main(sys.argv))

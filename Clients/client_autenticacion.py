@@ -19,39 +19,35 @@ class Client(Ice.Application):
         except FileNotFoundError:
             print("No se encuentra el proxy del servidor.")
 
-        proxy = self.communicator().stringToProxy("default -t -e 1.1:tcp -h pike.esi.uclm.es -p 6000 -t 60000")
+        proxy = self.communicator().stringToProxy(server_proxy)
         authentication = IceGauntlet.AuthenticationPrx.checkedCast(proxy)
 
-        if len(argv) == 3:
-            valido = authentication.isValid(argv[1])
-            print(valido)
-        else:
-            print("Introduce: 1-Change password 2-Get new token")
-            option = input()
-            if  option == "1" :
-                print("Introduce el usuario")
-                user = input()
-                print("Introduce la contraseña actual")
-                current_pass = getpass()
-                current_pass = hashlib.sha256(current_pass.encode()).hexdigest()
-                print("Introduce la nueva contraseña")
-                new_pass = getpass()
-                new_pass = hashlib.sha256(new_pass.encode()).hexdigest()
-                try:
-                    authentication.changePassword(user, current_pass, new_pass)
-                except IceGauntlet.Unauthorized:
-                    print("\nERROR,Contraseña o usuario incorrectos")
+        print("Introduce: \n1-Change password \n2-Get new token")
+        option = input()
+        if  option == "1" :
+            print("Introduce el usuario")
+            user = input()
+            print("Introduce la contraseña actual")
+            current_pass = getpass()
+            current_pass = hashlib.sha256(current_pass.encode()).hexdigest()
+            print("Introduce la nueva contraseña")
+            new_pass = getpass()
+            new_pass = hashlib.sha256(new_pass.encode()).hexdigest()
+            try:
+                authentication.changePassword(user, current_pass, new_pass)
+            except IceGauntlet.Unauthorized:
+                print("\nERROR,Contraseña o usuario incorrectos")
 
-            if option == "2" :
-                print("Introduce el usuario")
-                user = input()
-                print("Introduce la contraseña")
-                current_pass = getpass()
-                current_pass = hashlib.sha256(current_pass.encode()).hexdigest()
-                try:
-                    token = authentication.getNewToken(user, current_pass)
-                    print("token: "+token)
-                except IceGauntlet.Unauthorized:
-                    print("\nERROR,Contraseña o ususario incorrectos")
+        if option == "2" :
+            print("Introduce el usuario")
+            user = input()
+            print("Introduce la contraseña")
+            current_pass = getpass()
+            current_pass = hashlib.sha256(current_pass.encode()).hexdigest()
+            try:
+                token = authentication.getNewToken(user, current_pass)
+                print("token: "+token)
+            except IceGauntlet.Unauthorized:
+                print("\nERROR,Contraseña o ususario incorrectos")
 
 sys.exit(Client().main(sys.argv))
