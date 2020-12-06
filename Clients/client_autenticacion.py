@@ -12,12 +12,18 @@ import IceGauntlet
 class Client(Ice.Application):
     """El cliente puede cambiar la contraseña y/o obtener un nuevo token"""
     def run(self, argv):
-        #hashlib=None
-        proxy = self.communicator().stringToProxy(argv[1])
+        server_proxy = ""
+        try:
+            with open("proxys/auth_server-proxy.out") as proxy_string:
+                server_proxy=proxy_string.read()
+        except FileNotFoundError:
+            print("No se encuentra el proxy del servidor.")
+
+        proxy = self.communicator().stringToProxy("default -t -e 1.1:tcp -h pike.esi.uclm.es -p 6000 -t 60000")
         authentication = IceGauntlet.AuthenticationPrx.checkedCast(proxy)
 
         if len(argv) == 3:
-            valido = authentication.isValid(argv[2])
+            valido = authentication.isValid(argv[1])
             print(valido)
         else:
             print("Introduce: 1-Change password 2-Get new token")
@@ -28,11 +34,9 @@ class Client(Ice.Application):
                 print("Introduce la contraseña actual")
                 current_pass = getpass()
                 current_pass = hashlib.sha256(current_pass.encode()).hexdigest()
-                print(current_pass)
                 print("Introduce la nueva contraseña")
                 new_pass = getpass()
                 new_pass = hashlib.sha256(new_pass.encode()).hexdigest()
-                print(new_pass)
                 try:
                     authentication.changePassword(user, current_pass, new_pass)
                 except IceGauntlet.Unauthorized:
@@ -43,6 +47,7 @@ class Client(Ice.Application):
                 user = input()
                 print("Introduce la contraseña")
                 current_pass = getpass()
+                current_pass = hashlib.sha256(current_pass.encode()).hexdigest()
                 try:
                     token = authentication.getNewToken(user, current_pass)
                     print("token: "+token)
