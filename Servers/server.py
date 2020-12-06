@@ -7,9 +7,13 @@ import json
 import random
 import sys
 from os import remove
+#pylint: disable=E0401
+#pylint: disable=C0413
 import Ice
 Ice.loadSlice('icegauntlet.ice')
 import IceGauntlet
+#pylint: enable=E0401
+#pylint: enable=C0413
 
 class RoomManagment(IceGauntlet.RoomManager):
     """Incluye los métodos necesarios para poder publicar y eliminar un mapa"""
@@ -17,7 +21,7 @@ class RoomManagment(IceGauntlet.RoomManager):
     j = {"Autores":{}}
     if os.stat("Servers/data.json").st_size==0:
         with open("Servers/data.json", "w") as file:
-                json.dump(j,file)
+            json.dump(j,file)
 
     def __init__(self, proxy_auth_server):
         self.auth_server = IceGauntlet.AuthenticationPrx.checkedCast(proxy_auth_server)
@@ -39,14 +43,16 @@ class RoomManagment(IceGauntlet.RoomManager):
                     existe_level=True
 
         try:
+            #pylint: disable=W0104
             j["Autores"][token]
+            #pylint: enable=W0104
             for level in j["Autores"][token]["maps"]:
                 if level_searched==level:
                     existe_pertenece = True
 
         except KeyError:
             print("Usuario no encontrado")
-            
+
         return existe_level, existe_pertenece
 
     def publish(self, token, room_data, current=None):
@@ -59,14 +65,15 @@ class RoomManagment(IceGauntlet.RoomManager):
         if not self.auth_server.isValid(token):
             raise IceGauntlet.Unauthorized
         try:
+            # pylint: disable=W0106
             json.loads(room_data)["data"]
             json.loads(room_data)["room"]
+            # pylint: enable=W0106
         except KeyError:
             raise IceGauntlet.WrongRoomFormat
 
         existe_level, existe_pertenece = self.autoria(token, json.loads(room_data)["room"])
 
-        
         if (not existe_pertenece and not existe_level) or existe_pertenece:
             archivo = open("server_maps/"+str(json.loads(room_data)["room"]), "w")
             archivo.write(room_data)

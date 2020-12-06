@@ -3,9 +3,13 @@
 """El modulo client_room_managment.py incorpora los metodos necesarios para
 publicar y borrar un mapa en el servidor"""
 import sys
+#pylint: disable=E0401
+#pylint: disable=C0413
 import Ice
 Ice.loadSlice('icegauntlet.ice')
 import IceGauntlet
+#pylint: enable=E0401
+#pylint: enable=C0413
 
 class Client(Ice.Application):
     """Se conecta con el servidor y contiene los métodos para publicar

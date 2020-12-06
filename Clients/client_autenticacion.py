@@ -4,14 +4,22 @@
 cambiar contraseña y de obtener nuevo token para un usuario registrado."""
 import sys
 from getpass import getpass
-import Ice
 import hashlib
+#pylint: disable=E0401
+#pylint: disable=C0413
+import Ice
 Ice.loadSlice('icegauntlet.ice')
 import IceGauntlet
+#pylint: enable=E0401
+#pylint: enable=C0413
 
 class Client(Ice.Application):
     """El cliente puede cambiar la contraseña y/o obtener un nuevo token"""
     def run(self, argv):
+        if len(argv) != 2:
+            print("Error en el numero de argumentos. Argumentos: nombre + proxy.")
+            sys.exit(1)
+
         proxy = self.communicator().stringToProxy(argv[1])
         authentication = IceGauntlet.AuthenticationPrx.checkedCast(proxy)
         if not authentication:
