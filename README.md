@@ -6,9 +6,11 @@ Miembros del equipo:
 - Juan Muñoz Calvo <Juan.Munoz7@alu.uclm.es>
 - Julio Molina Díaz <Julio.Molina@alu.uclm.es>
 
-REPOSITORIO: <https://github.com/Carlos-Bernalte/ICEGauntlet-Multijugador>
+REPOSITORIO: <https://github.com/Carlos-Bernalte/SSDD_MunozMolinaBernalte>
 ##Ejecución de los scripts:
 Gestion de mapas:
+
+Los mapas que se deseen subir al servidor se encuentran el la carpeta icegauntlet\editor\maps.
 ```sh
 ./delete_map.sh proxy_servicio_de_mapas token nombre_del_archivo
 ./upload_map.sh proxy_servicio_de_mapas token nombre_del_mapa
