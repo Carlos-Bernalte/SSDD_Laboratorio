@@ -71,7 +71,13 @@ class DungeonMap:
         
     @property
     def next_room(self):
-        return self.game.getRoom()
+        try:
+            data=self.game.getRoom()
+        except IceGauntlet.RoomNotExists:
+            print("No hay mapas en el servidor")
+            self.finished=True
+            data=None
+        return data
 
 if __name__ == '__main__':
     sys.exit(Client().main(sys.argv))
