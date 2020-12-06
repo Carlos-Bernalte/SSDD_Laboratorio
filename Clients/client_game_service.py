@@ -23,11 +23,15 @@ class Client(Ice.Application):
         self.game = IceGauntlet.DungeonPrx.checkedCast(proxy)
         if not self.game:
             raise RuntimeError('Invalid proxy')
+        try:
+            room_data=self.game.get_room()
+            archivo = open("icegauntlet/assets/map.json","w")
+            archivo.write(room_data)
+            archivo.close()
+        except IceGauntlet.RoomNotExists:
+            print("El servidor no contiene mapas")
 
-        room_data=self.game.get_room()
-        archivo = open("icegauntlet/assets/map.json","w")
-        archivo.write(room_data)
-        archivo.close()
+
 
         return 0
 

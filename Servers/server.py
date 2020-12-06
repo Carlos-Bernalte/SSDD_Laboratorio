@@ -29,7 +29,6 @@ class RoomManagment(IceGauntlet.RoomManager):
         """Método para controlar que el cliente esté autorizado"""
 
         existe_level=False
-        existe_usuario=False
         existe_pertenece=False
         with open("Servers/data.json", "r") as file:
             j=json.load(file)
@@ -41,17 +40,14 @@ class RoomManagment(IceGauntlet.RoomManager):
 
         try:
             j["Autores"][token]
-            existe_usuario = True
             for level in j["Autores"][token]["maps"]:
                 if level_searched==level:
                     existe_pertenece = True
 
         except KeyError:
             print("Usuario no encontrado")
-            existe_usuario=False
             
-
-        return existe_level, existe_usuario, existe_pertenece
+        return existe_level, existe_pertenece
 
     def publish(self, token, room_data, current=None):
         """
@@ -63,7 +59,7 @@ class RoomManagment(IceGauntlet.RoomManager):
         if not self.auth_server.isValid(token):
             raise IceGauntlet.Unauthorized
 
-        existe_level, existe_usuario, existe_pertenece = self.autoria(token, json.loads(room_data)["room"])
+        existe_level, existe_pertenece = self.autoria(token, json.loads(room_data)["room"])
 
         print(existe_pertenece)
 
@@ -72,7 +68,7 @@ class RoomManagment(IceGauntlet.RoomManager):
             json.loads(room_data)["room"]
         except KeyError:
             raise IceGauntlet.WrongRoomFormat
-        if not existe_pertenece and not existe_level:
+        if (not existe_pertenece and not existe_level) or existe_pertenece:
             archivo = open("server_maps/"+str(json.loads(room_data)["room"]), "w")
             archivo.write(room_data)
             archivo.close()
@@ -117,7 +113,7 @@ class RoomManagment(IceGauntlet.RoomManager):
         if not self.auth_server.isValid(token):
             raise IceGauntlet.Unauthorized
 
-        existe_level, existe_usuario, existe_pertenece = self.autoria(token, room_name)
+        existe_level, existe_pertenece = self.autoria(token, room_name)
 
         if not existe_level:
             raise IceGauntlet.RoomNotExists

@@ -16,7 +16,8 @@ class Client(Ice.Application):
             new_room=open("icegauntlet/editor/maps/"+map_name, "r")
             self.room.publish(token,new_room.read())
             new_room.close()
-
+        except IceGauntlet.WrongRoomException:
+            print("Formato mapa incorrecto")
         except IceGauntlet.Unauthorized:
             print("TOKEN INCORRECTO")
         except IceGauntlet.RoomAlreadyExists:
