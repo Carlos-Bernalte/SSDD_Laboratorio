@@ -51,7 +51,7 @@ class RoomManagment(IceGauntlet.RoomManager):
                     existe_pertenece = True
 
         except KeyError:
-            print("Usuario no encontrado")
+            print("Usuario publica por primera vez")
 
         return existe_level, existe_pertenece
 
