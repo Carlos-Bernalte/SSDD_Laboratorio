@@ -1,4 +1,5 @@
 # ICEGAUNTLET
+REPOSITORIO: <https://github.com/Carlos-Bernalte/SSDD_MunozMolinaBernalte>
 
 Miembros del equipo:
 
@@ -6,7 +7,6 @@ Miembros del equipo:
 - Juan Muñoz Calvo <Juan.Munoz7@alu.uclm.es>
 - Julio Molina Díaz <Julio.Molina@alu.uclm.es>
 
-REPOSITORIO: <https://github.com/Carlos-Bernalte/SSDD_MunozMolinaBernalte>
 
 ## Ejecución de los scripts:
 
