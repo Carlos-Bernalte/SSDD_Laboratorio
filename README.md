@@ -7,7 +7,9 @@ Miembros del equipo:
 - Julio Molina Díaz <Julio.Molina@alu.uclm.es>
 
 REPOSITORIO: <https://github.com/Carlos-Bernalte/SSDD_MunozMolinaBernalte>
-##Ejecución de los scripts:
+
+## Ejecución de los scripts:
+
 Gestion de mapas:
 
 Los mapas que se deseen subir al servidor se encuentran el la carpeta icegauntlet\editor\maps.
