@@ -156,23 +156,17 @@ class Server(Ice.Application):
 
     def run(self, argv):
         broker = self.communicator()
-        auth_server_proxy=None
-        try:
-            auth_server_proxy=open("proxys/auth_server-proxy.out", "r")
-        except FileNotFoundError:
-            print("No se encuentra el proxy del servidor de autentificación.")
-
-        prox=auth_server_proxy.read()
+        auth_server_proxy=argv[1]
 
         adapter_gs = broker.createObjectAdapter("ServerAdapterGS")
-        servant_gs = DungeonI(self.communicator().stringToProxy(prox))
+        servant_gs = DungeonI(self.communicator().stringToProxy(auth_server_proxy))
         proxy_gs = adapter_gs.add(servant_gs, broker.stringToIdentity("dungeon1"))
         adapter_gs.activate()
 
         self.save_proxy(proxy_gs, "ProxyDungeon.out")
 
         adapterrm = broker.createObjectAdapter("ServerAdapterRM")
-        servantrm = RoomManagment(self.communicator().stringToProxy(prox))
+        servantrm = RoomManagment(self.communicator().stringToProxy(auth_server_proxy))
         proxyrm = adapterrm.add(servantrm, broker.stringToIdentity("roommanag1"))
         adapterrm.activate()
 

@@ -12,15 +12,10 @@ import IceGauntlet
 class Client(Ice.Application):
     """El cliente puede cambiar la contraseña y/o obtener un nuevo token"""
     def run(self, argv):
-        server_proxy = ""
-        try:
-            with open("proxys/auth_server-proxy.out") as proxy_string:
-                server_proxy=proxy_string.read()
-        except FileNotFoundError:
-            print("No se encuentra el proxy del servidor.")
-
-        proxy = self.communicator().stringToProxy(server_proxy)
+        proxy = self.communicator().stringToProxy(argv[1])
         authentication = IceGauntlet.AuthenticationPrx.checkedCast(proxy)
+        if not authentication:
+            raise RuntimeError('Invalid proxy')
 
         print("Introduce: \n1-Change password \n2-Get new token")
         option = input()

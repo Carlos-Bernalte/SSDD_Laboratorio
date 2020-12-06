@@ -36,23 +36,16 @@ class Client(Ice.Application):
             print("El mapa que se esta intentando borrar no existe")
 
     def run(self, argv):
-        server_proxy=""
-        try:
-            with open("proxys/ProxyRM.out") as proxy_string:
-                server_proxy=proxy_string.read()
-        except FileNotFoundError:
-            print("No se encuentra el proxy del servidor.")
 
-        proxy = self.communicator().stringToProxy(server_proxy)
-        self.room = IceGauntlet.RoomManagerPrx.checkedCast(proxy)
-        if not self.room:
-            raise RuntimeError('Invalid proxy')
-
-        if len(argv) == 4:
+        if len(argv) == 5:
+            proxy = self.communicator().stringToProxy(argv[2])
+            self.room = IceGauntlet.RoomManagerPrx.checkedCast(proxy)
+            if not self.room:
+                raise RuntimeError('Invalid proxy')
             if argv[1]=="-p":
-                self.publish_map(argv[2],argv[3])
+                self.publish_map(argv[3],argv[4])
             elif argv[1]=="-r":
-                self.remove_map(argv[2],argv[3])
+                self.remove_map(argv[3],argv[4])
             else:
                 print("Opción no disponible.")
                 return 1
