@@ -117,8 +117,9 @@ class RoomManagment(IceGauntlet.RoomManager):
         Si el mapa no existe, salta la excepcion RoomNotExists
         """
 	
-        autor = ""
-        if not self.auth_server.getOwner(token):
+        autor = self.auth_server.getOwner(token)
+        print("El autor de este mapa es: ",autor)
+        if not autor:
             raise IceGauntlet.Unauthorized
 
         existe_level, existe_pertenece = self.autoria(autor, room_name)

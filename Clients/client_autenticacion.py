@@ -32,10 +32,10 @@ class Client(Ice.Application):
             user = input()
             print("Introduce la contraseña actual")
             current_pass = getpass()
-            current_pass = hashlib.sha256(current_pass.encode()).hexdigest()
+            #current_pass = hashlib.sha256(current_pass.encode()).hexdigest()
             print("Introduce la nueva contraseña")
             new_pass = getpass()
-            new_pass = hashlib.sha256(new_pass.encode()).hexdigest()
+            #new_pass = hashlib.sha256(new_pass.encode()).hexdigest()
             try:
                 authentication.changePassword(user, current_pass, new_pass)
             except IceGauntlet.Unauthorized:
@@ -46,7 +46,7 @@ class Client(Ice.Application):
             user = input()
             print("Introduce la contraseña")
             current_pass = getpass()
-            current_pass = hashlib.sha256(current_pass.encode()).hexdigest()
+            #current_pass = hashlib.sha256(current_pass.encode()).hexdigest()
             try:
                 token = authentication.getNewToken(user, current_pass)
                 print("token: "+token)

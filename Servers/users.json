@@ -1,14 +1,14 @@
 {
-  "carlos": {
-    "current_token": "Y1DCNNnejzBBPamkmHpRIKYUNm8ZXzeR6rXpzBPQ",
-    "password_hash": "hola"
-  },
-  "juan": {
-	"current_token": "Y1DCNNnejzBBPamkmHpRIKYUNm8ZXzeR6rXpzTTT",
-    "password_hash": "hola"
-  },
-  "juliomd20": {
-    "current_token": "Y1DCNNnejzBBPamkmHpRIKYUNm8ZXzeR6rXpzzzz",
-    "password_hash": "hola"
-  }
+    "carlos": {
+        "current_token": "NBkmFLowYIRE2A2B7ynLwRqVj55Q3OXfBEn3JF3O",
+        "password_hash": ""
+    },
+    "juan": {
+        "current_token": "BIuWLQxnQCawucv4slWE5IlUnhrGO17m7U84bvoc",
+        "password_hash": "hola"
+    },
+    "juliomd20": {
+        "current_token": "Y1DCNNnejzBBPamkmHpRIKYUNm8ZXzeR6rXpzzzz",
+        "password_hash": "hola"
+    }
 }

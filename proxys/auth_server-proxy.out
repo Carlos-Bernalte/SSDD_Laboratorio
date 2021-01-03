@@ -1,1 +1,9 @@
-default -t -e 1.1:tcp -h 192.168.1.39 -p 38255 -t 60000:tcp -h 172.24.177.161 -p 38255 -t 60000
+{'Y1DCNNnejzBBPamkmHpRIKYUNm8ZXzeR6rXpzzzz', 'NBkmFLowYIRE2A2B7ynLwRqVj55Q3OXfBEn3JF3O', 'BIuWLQxnQCawucv4slWE5IlUnhrGO17m7U84bvoc'}
+default -t -e 1.1:tcp -h 192.168.1.219 -p 6000 -t 60000
+El token a analizar es:  BIuWLQxnQCawucv4slWE5IlUnhrGO17m7U84bvoc
+carlos
+juan
+El token a analizar es:  NBkmFLowYIRE2A2B7ynLwRqVj55Q3OXfBEn3JF3O
+carlos
+El token a analizar es:  NBkmFLowYIRE2A2B7ynLwRqVj55Q3OXfBEn3JF3O
+carlos
