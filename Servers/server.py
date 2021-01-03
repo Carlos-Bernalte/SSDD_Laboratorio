@@ -29,7 +29,7 @@ class RoomManagment(IceGauntlet.RoomManager):
         if not self.auth_server:
             raise RuntimeError('Invalid proxy for authentification server')
 
-    def autoria(self, token, level_searched):
+    def autoria(self, autorDueno, level_searched):
         """Método para controlar que el cliente esté autorizado"""
 
         existe_level=False
@@ -44,9 +44,9 @@ class RoomManagment(IceGauntlet.RoomManager):
 
         try:
             #pylint: disable=W0104
-            j["Autores"][token]
+            j["Autores"][autorDueno]
             #pylint: enable=W0104
-            for level in j["Autores"][token]["maps"]:
+            for level in j["Autores"][autorDueno]["maps"]:
                 if level_searched==level:
                     existe_pertenece = True
 
@@ -61,9 +61,10 @@ class RoomManagment(IceGauntlet.RoomManager):
         Comprueba que el token del Cliente sea valido.
         Actualiza el registro de mapas de cada usuario.
         """
-
-        if not self.auth_server.isValid(token):
+        autor = ""
+        if not self.auth_server.getOwner(token):
             raise IceGauntlet.Unauthorized
+	
         try:
             # pylint: disable=W0106
             json.loads(room_data)["data"]
@@ -72,7 +73,7 @@ class RoomManagment(IceGauntlet.RoomManager):
         except KeyError:
             raise IceGauntlet.WrongRoomFormat
 
-        existe_level, existe_pertenece = self.autoria(token, json.loads(room_data)["room"])
+        existe_level, existe_pertenece = self.autoria(autor, json.loads(room_data)["room"])
 
         if (not existe_pertenece and not existe_level) or existe_pertenece:
             archivo = open("server_maps/"+str(json.loads(room_data)["room"]), "w")
@@ -89,20 +90,20 @@ class RoomManagment(IceGauntlet.RoomManager):
         try:
             j["Autores"][token]
         except KeyError:
-            j["Autores"].update({"{}".format(token):{"maps":maps}})
+            j["Autores"].update({"{}".format(autor):{"maps":maps}})
             with open("Servers/data.json", "w") as file:
                 json.dump(j, file)
 
         with open("Servers/data.json") as file:
             j = json.load(file)
 
-        maps = j["Autores"][token]["maps"]
+        maps = j["Autores"][autor]["maps"]
         for i in range(0,len(maps)):
             if maps[i] ==  json.loads(room_data)["room"]:
                 existe = True
         if not existe:
             maps.append(json.loads(room_data)["room"])
-            j["Autores"].update({"{}".format(token):{"maps":maps}})
+            j["Autores"].update({"{}".format(autor):{"maps":maps}})
             with open("Servers/data.json", "w") as file:
                 json.dump(j, file)
 
@@ -115,11 +116,12 @@ class RoomManagment(IceGauntlet.RoomManager):
         mapa, en caso contrario, salta la excepcion Unauthorized
         Si el mapa no existe, salta la excepcion RoomNotExists
         """
-
-        if not self.auth_server.isValid(token):
+	
+        autor = ""
+        if not self.auth_server.getOwner(token):
             raise IceGauntlet.Unauthorized
 
-        existe_level, existe_pertenece = self.autoria(token, room_name)
+        existe_level, existe_pertenece = self.autoria(autor, room_name)
 
         if not existe_level:
             raise IceGauntlet.RoomNotExists
@@ -130,7 +132,7 @@ class RoomManagment(IceGauntlet.RoomManager):
         if existe_pertenece:
             with open("Servers/data.json") as file:
                 j = json.load(file)
-            j["Autores"][token]["maps"].remove(room_name)
+            j["Autores"][autor]["maps"].remove(room_name)
             with open("Servers/data.json", "w") as file:
                 json.dump(j, file)
             remove("server_maps/"+str(room_name))
