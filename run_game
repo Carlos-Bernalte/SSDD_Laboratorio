@@ -1,1 +1,2 @@
+#!/bin/bash
 ./icegauntlet/dungeon_client --proxy "$@"

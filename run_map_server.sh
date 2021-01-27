@@ -1,1 +1,0 @@
-python3 Servers/server.py --Ice.Config=Servers/server.conf "$1"

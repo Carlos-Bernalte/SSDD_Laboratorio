@@ -1,1 +1,12 @@
-{"Autores": {"juan": {"maps": []}, "": {"maps": ["CortoPeroIntenso"]}}}
+{
+    "Autores": {
+        "juan": {
+            "maps": []
+        },
+        "": {
+            "maps": [
+                "CortoPeroIntenso"
+            ]
+        }
+    }
+}

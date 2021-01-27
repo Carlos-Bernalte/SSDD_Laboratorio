@@ -1,0 +1,2 @@
+#!/bin/bash
+./server_auth_local/auth_server --Ice.Config=server_auth_local/auth_server.conf | tee proxys/auth_server-proxy.out

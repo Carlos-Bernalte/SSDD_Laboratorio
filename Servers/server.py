@@ -15,12 +15,14 @@ import IceGauntlet
 #pylint: enable=E0401
 #pylint: enable=C0413
 
+DIR_MAPAS="./Servers/server_maps/"
+DIR_DATA="./Servers/data.json"
 class RoomManagment(IceGauntlet.RoomManager):
     """Incluye los métodos necesarios para poder publicar y eliminar un mapa"""
 
     j = {"Autores":{}}
-    if os.stat("Servers/data.json").st_size==0:
-        with open("Servers/data.json", "w") as file:
+    if os.stat(DIR_DATA).st_size==0:
+        with open(DIR_DATA, "w") as file:
             json.dump(j,file)
 
     def __init__(self, proxy_auth_server):
@@ -34,7 +36,7 @@ class RoomManagment(IceGauntlet.RoomManager):
 
         existe_level=False
         existe_pertenece=False
-        with open("Servers/data.json", "r") as file:
+        with open(DIR_DATA, "r") as file:
             j=json.load(file)
 
         for autor in j["Autores"]:
@@ -76,7 +78,7 @@ class RoomManagment(IceGauntlet.RoomManager):
         existe_level, existe_pertenece = self.autoria(autor, json.loads(room_data)["room"])
 
         if (not existe_pertenece and not existe_level) or existe_pertenece:
-            archivo = open("server_maps/"+str(json.loads(room_data)["room"]), "w")
+            archivo = open(DIR_MAPAS+str(json.loads(room_data)["room"]), "w")
             archivo.write(room_data)
             archivo.close()
         else:
@@ -84,17 +86,17 @@ class RoomManagment(IceGauntlet.RoomManager):
 
         maps = []
         existe = False
-        with open("Servers/data.json") as file:
+        with open(DIR_DATA) as file:
             j = json.load(file)
 
         try:
             j["Autores"][token]
         except KeyError:
             j["Autores"].update({"{}".format(autor):{"maps":maps}})
-            with open("Servers/data.json", "w") as file:
+            with open(DIR_DATA, "w") as file:
                 json.dump(j, file)
 
-        with open("Servers/data.json") as file:
+        with open(DIR_DATA) as file:
             j = json.load(file)
 
         maps = j["Autores"][autor]["maps"]
@@ -104,7 +106,7 @@ class RoomManagment(IceGauntlet.RoomManager):
         if not existe:
             maps.append(json.loads(room_data)["room"])
             j["Autores"].update({"{}".format(autor):{"maps":maps}})
-            with open("Servers/data.json", "w") as file:
+            with open(DIR_DATA, "w") as file:
                 json.dump(j, file)
 
     def remove(self, token, room_name, current=None):
@@ -131,19 +133,33 @@ class RoomManagment(IceGauntlet.RoomManager):
             raise IceGauntlet.Unauthorized
 
         if existe_pertenece:
-            with open("Servers/data.json") as file:
+            with open(DIR_DATA) as file:
                 j = json.load(file)
             j["Autores"][autor]["maps"].remove(room_name)
-            with open("Servers/data.json", "w") as file:
+            with open(DIR_DATA, "w") as file:
                 json.dump(j, file)
-            remove("server_maps/"+str(room_name))
+            remove(DIR_MAPAS+str(room_name))
+            
+class RoomManagerSync():
+    def __init__(self):
+        self.a=0
+    
+    def newRoom():
+        print("New room")
 
+    def removedRoom():
+        print("Removed room")
+
+    def hello():
+        print("Hellow")
+
+    def announce():
+        print("Announce")
 
 class DungeonI(IceGauntlet.Dungeon):
     """Clase referente a la accion de obtener un mapa"""
 
     def __init__(self, proxy_auth_server):
-
         self.auth_server = IceGauntlet.AuthenticationPrx.checkedCast(proxy_auth_server)
         if not self.auth_server:
             raise RuntimeError('Invalid proxy for authentification server')
@@ -165,26 +181,26 @@ class Server(Ice.Application):
     """
 
     def run(self, argv):
+
         broker = self.communicator()
         auth_server_proxy=argv[1]
 
         adapter_gs = broker.createObjectAdapter("ServerAdapterGS")
-        servant_gs = DungeonI(self.communicator().stringToProxy(auth_server_proxy))
+        servant_gs = DungeonI(broker.stringToProxy(auth_server_proxy))
         proxy_gs = adapter_gs.add(servant_gs, broker.stringToIdentity("dungeon1"))
         adapter_gs.activate()
 
         self.save_proxy(proxy_gs, "ProxyDungeon.out")
 
         adapterrm = broker.createObjectAdapter("ServerAdapterRM")
-        servantrm = RoomManagment(self.communicator().stringToProxy(auth_server_proxy))
+        servantrm = RoomManagment(broker.stringToProxy(auth_server_proxy))
         proxyrm = adapterrm.add(servantrm, broker.stringToIdentity("roommanag1"))
         adapterrm.activate()
 
-        self.save_proxy(proxyrm, "ProxyRM.out")
+        print(proxyrm)
 
         self.shutdownOnInterrupt()
         broker.waitForShutdown()
-
         return 0
 
     def save_proxy(self, proxy, file_name=""):
