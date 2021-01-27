@@ -18,6 +18,7 @@ import game.common
 import game.screens
 import game.pyxeltools
 import game.orchestration
+import random
 
 EXIT_OK = 0
 BAD_COMMAND_LINE = 1
@@ -64,15 +65,17 @@ class Client(Ice.Application):
 class DungeonMap:
     '''Store a list of rooms'''
     def __init__(self, proxy):
-        self.game = IceGauntlet.DungeonPrx.checkedCast(proxy)
+        self.game = IceGauntlet.RoomManagerPrx.checkedCast(proxy)
         if not self.game:
             raise RuntimeError('Invalid proxy')
         self.finished=False
         
     @property
     def next_room(self):
+        rooms=self.game.availableRooms()
+        index = random.randrange(0, len(rooms))
         try:
-            data=self.game.getRoom()
+            data=self.game.getRoom(rooms[index])    
         except IceGauntlet.RoomNotExists:
             print("No hay mapas en el servidor")
             self.finished=True

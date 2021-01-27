@@ -139,8 +139,17 @@ class RoomManagment(IceGauntlet.RoomManager):
             with open(DIR_DATA, "w") as file:
                 json.dump(j, file)
             remove(DIR_MAPAS+str(room_name))
-            
-class RoomManagerSync():
+    
+    def availableRooms(self, current=None):
+        return os.listdir(DIR_MAPAS)
+
+    def getRoom(self, roomName='',current=None):
+        """Devuelve un mapa"""
+        level= open(DIR_MAPAS+roomName, "r")
+        data=level.read()
+        level.close()
+        return data        
+class RoomManagerSyncChannelI(IceGauntlet.RoomManagerSync, Ice.Application):
     def __init__(self):
         self.a=0
     
@@ -155,7 +164,7 @@ class RoomManagerSync():
 
     def announce():
         print("Announce")
-
+    
 class DungeonI(IceGauntlet.Dungeon):
     """Clase referente a la accion de obtener un mapa"""
 
@@ -164,14 +173,7 @@ class DungeonI(IceGauntlet.Dungeon):
         if not self.auth_server:
             raise RuntimeError('Invalid proxy for authentification server')
 
-    def getRoom(self, current=None):
-        """Devuelve un mapa aleatorio"""
-        maps = os.listdir("server_maps/")
-        index = random.randrange(0, len(maps))
-        level= open("server_maps/"+maps[index], "r")
-        data=level.read()
-        level.close()
-        return data
+    
 
 
 class Server(Ice.Application):
@@ -184,14 +186,14 @@ class Server(Ice.Application):
 
         broker = self.communicator()
         auth_server_proxy=argv[1]
-
+        '''
         adapter_gs = broker.createObjectAdapter("ServerAdapterGS")
         servant_gs = DungeonI(broker.stringToProxy(auth_server_proxy))
         proxy_gs = adapter_gs.add(servant_gs, broker.stringToIdentity("dungeon1"))
         adapter_gs.activate()
 
         self.save_proxy(proxy_gs, "ProxyDungeon.out")
-
+'''
         adapterrm = broker.createObjectAdapter("ServerAdapterRM")
         servantrm = RoomManagment(broker.stringToProxy(auth_server_proxy))
         proxyrm = adapterrm.add(servantrm, broker.stringToIdentity("roommanag1"))
