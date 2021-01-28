@@ -220,11 +220,12 @@ class Server(Ice.Application):
     """
 
     def run(self, argv):
-
+        topic_manager = self.get_topic_manager()
         broker = self.communicator()
         auth_server_proxy=argv[1]
         
         adapterrm = broker.createObjectAdapter("ServerAdapterRM")
+
 
         servantRoomSync=RoomManagerSyncChannelI()
         proxySync = adapterrm.add(servantRoomSync, broker.stringToIdentity(servantRoomSync.id))
@@ -246,6 +247,15 @@ class Server(Ice.Application):
         self.shutdownOnInterrupt()
         broker.waitForShutdown()
         return 0
+
+    def get_topic_manager(self):
+        key = 'IceStorm.TopicManager.Proxy'
+        proxy = self.communicator().propertyToProxy(key)
+        if proxy is None:
+            print("property '{}' not set".format(key))
+            return None
+
+        return IceStorm.TopicManagerPrx.checkedCast(proxy)
 
     def save_proxy(self, proxy, file_name=""):
         """Funcion encargada de guardar el proxy en archivos con el nombre dado"""
