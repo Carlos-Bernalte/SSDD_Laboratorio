@@ -7,9 +7,11 @@ import json
 import random
 import sys
 from os import remove
+import uuid
 #pylint: disable=E0401
 #pylint: disable=C0413
 import Ice
+import IceStorm
 Ice.loadSlice('icegauntlet.ice')
 import IceGauntlet
 #pylint: enable=E0401
@@ -25,9 +27,10 @@ class RoomManagment(IceGauntlet.RoomManager):
         with open(DIR_DATA, "w") as file:
             json.dump(j,file)
 
-    def __init__(self, proxy_auth_server):
+    def __init__(self, proxy_auth_server, serverSync):
+        self.id=str(uuid.uuid4())
         self.auth_server = IceGauntlet.AuthenticationPrx.checkedCast(proxy_auth_server)
-
+        self.rmSync=serverSync
         if not self.auth_server:
             raise RuntimeError('Invalid proxy for authentification server')
 
@@ -149,21 +152,56 @@ class RoomManagment(IceGauntlet.RoomManager):
         data=level.read()
         level.close()
         return data        
+
 class RoomManagerSyncChannelI(IceGauntlet.RoomManagerSync, Ice.Application):
     def __init__(self):
-        self.a=0
-    
-    def newRoom():
-        print("New room")
+        self.id=str(uuid.uuid4())
+        self._topic_mgr = self.get_topic_manager()
+        self._topic = self.getTopic()
+        self._publisher = self.getPublisher()
+        self._Servers = []
 
+
+    def get_topic_manager(self): 
+        key = 'IceStorm.TopicManager.Proxy'
+        proxy = self.communicator().propertyToProxy(key)
+        print(proxy)
+        if proxy is None:
+            print("property {} not set".format(key))
+            return None
+        return IceStorm.TopicManagerPrx.checkedCast(proxy)
+
+    def getTopic(self):
+        if not self._topic_mgr:
+            print('Invalid proxy')
+            return 2
+        try:
+            topic = self._topic_mgr.retrieve("RoomManagerSyncChannel")
+        except IceStorm.NoSuchTopic:
+            topic = self._topic_mgr.create("RoomManagerSyncChannel")
+        return topic
+
+    def getPublisher(self):
+        publisher = self._topic.getPublisher()
+        return IceGauntlet.RoomManagerSyncPrx.uncheckedCast(publisher)
+
+    def hello(self, manager, managerId,current=None):
+        
+        if managerId not in self._Servers:
+            print(">>",managerId,': Hola soy el nuevo')
+            self._Servers.append(managerId)
+            self._publisher.announce(manager, self.id)
+        print(self._Servers)
+    def announce(self, manager, managerId,current=None):
+        print('>>', managerId,': Hola a todo el mundo')
+        self._Servers.append(managerId) 
+        
     def removedRoom():
         print("Removed room")
 
-    def hello():
-        print("Hellow")
+    def newRoom():
+        print("new Room ")
 
-    def announce():
-        print("Announce")
     
 class DungeonI(IceGauntlet.Dungeon):
     """Clase referente a la accion de obtener un mapa"""
@@ -175,7 +213,6 @@ class DungeonI(IceGauntlet.Dungeon):
 
     
 
-
 class Server(Ice.Application):
     """
     Clase referente a la creacion de los sirvientes de los proxys
@@ -186,20 +223,25 @@ class Server(Ice.Application):
 
         broker = self.communicator()
         auth_server_proxy=argv[1]
-        '''
-        adapter_gs = broker.createObjectAdapter("ServerAdapterGS")
-        servant_gs = DungeonI(broker.stringToProxy(auth_server_proxy))
-        proxy_gs = adapter_gs.add(servant_gs, broker.stringToIdentity("dungeon1"))
-        adapter_gs.activate()
-
-        self.save_proxy(proxy_gs, "ProxyDungeon.out")
-'''
+        
         adapterrm = broker.createObjectAdapter("ServerAdapterRM")
-        servantrm = RoomManagment(broker.stringToProxy(auth_server_proxy))
-        proxyrm = adapterrm.add(servantrm, broker.stringToIdentity("roommanag1"))
+
+        servantRoomSync=RoomManagerSyncChannelI()
+        proxySync = adapterrm.add(servantRoomSync, broker.stringToIdentity(servantRoomSync.id))
+
+        servantrm = RoomManagment(broker.stringToProxy(auth_server_proxy),servantRoomSync)
+        proxyrm = adapterrm.add(servantrm, broker.stringToIdentity(servantrm.id))
+
         adapterrm.activate()
 
-        print(proxyrm)
+        manager = IceGauntlet.RoomManagerPrx.uncheckedCast(proxyrm)
+        print('Proxy Room Manager', proxyrm)
+        print('Proxy Sync:', proxySync)
+        print('--------------------------------------------')
+        servantrm.rmSync._publisher.hello(manager, servantrm.rmSync.id)
+        qos={}
+        servantrm.rmSync._topic.subscribeAndGetPublisher(qos, proxySync)
+
 
         self.shutdownOnInterrupt()
         broker.waitForShutdown()
