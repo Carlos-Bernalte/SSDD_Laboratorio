@@ -50,7 +50,6 @@ class AuthenticationI(IceGauntlet.Authentication):
         with open(USERS_FILE, 'r') as contents:
             self._users_ = json.load(contents)
         self._active_tokens_ = set([user.get(CURRENT_TOKEN, None) for user in self._users_.values()])
-        print(self._active_tokens_)
 
     def __commit__(self):
         logging.debug('User database updated!')
