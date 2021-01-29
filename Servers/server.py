@@ -159,7 +159,7 @@ class RoomManagerSyncChannelI(IceGauntlet.RoomManagerSync, Ice.Application):
         self._topic_mgr = self.get_topic_manager()
         self._topic = self.getTopic()
         self._publisher = self.getPublisher()
-        self._Servers = [self.id]
+        self._Servers = []
 
 
     def get_topic_manager(self): 
@@ -187,15 +187,16 @@ class RoomManagerSyncChannelI(IceGauntlet.RoomManagerSync, Ice.Application):
 
     def hello(self, manager, managerId,current=None):
         if managerId not in self._Servers:
+            print(">>",managerId,': Hola soy el nuevo')
             self._Servers.append(managerId)
-            self._publisher.announce(manager, self.id)
-
+        self._publisher.announce(manager, self.id)
+        print(self._Servers)
     def announce(self, manager, managerId,current=None):
         if managerId not in self._Servers:
-            self._Servers.append(managerId)
-        if managerId == self.id:
-            self._Servers.sort()
-            print("Lista de servidores de", self.id, ": ", self._Servers)
+            self._publisher.hello(manager, managerId)
+            print('>>', managerId,': Hola a todo el mundo')
+            self._Servers.append(managerId) 
+        print(self._Servers)
         
     def removedRoom():
         print("Removed room")
@@ -222,7 +223,7 @@ class Server(Ice.Application):
     """
 
     def run(self, argv):
-        topic_manager = self.get_topic_manager()
+       # topic_manager = self.get_topic_manager()
         broker = self.communicator()
         auth_server_proxy=argv[1]
         
@@ -241,22 +242,15 @@ class Server(Ice.Application):
         print('Proxy Room Manager', proxyrm)
         print('Proxy Sync:', proxySync)
         print('--------------------------------------------')
-        servantrm.rmSync._publisher.hello(manager, servantrm.rmSync.id)
+        servantrm.rmSync.hello(manager, servantrm.rmSync.id)
+        servantrm.rmSync.newRoom("hola", servantrm.rmSync.id)
         qos={}
         servantrm.rmSync._topic.subscribeAndGetPublisher(qos, proxySync)
+
 
         self.shutdownOnInterrupt()
         broker.waitForShutdown()
         return 0
-
-    def get_topic_manager(self):
-        key = 'IceStorm.TopicManager.Proxy'
-        proxy = self.communicator().propertyToProxy(key)
-        if proxy is None:
-            print("property '{}' not set".format(key))
-            return None
-
-        return IceStorm.TopicManagerPrx.checkedCast(proxy)
 
     def save_proxy(self, proxy, file_name=""):
         """Funcion encargada de guardar el proxy en archivos con el nombre dado"""

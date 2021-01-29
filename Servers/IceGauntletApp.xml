@@ -57,14 +57,15 @@
       </server-template>
       <server-template id="IceGauntletAuthTemplate">
          <parameter name="index"/>
-         <server id="AuthServer${index}" activation="on-demand" exe="./server.py" pwd="${application.distrib}">
+         <server id="AuthServer${index}" activation="on-demand" exe="./auth_server" pwd="${application.distrib}">
             <properties>
                <property name="Ice.StdOut" value="${application.distrib}/server-out.txt"/>
                <property name="IceProgramName" value="${server}.AuthServer${index}"/>
                <property name="IcePatch2.Directory" value="/tmp/icegauntlet"/>
                <property name="Identity" value="auth"/>
             </properties>
-            <adapter name="IceGauntletAuthAdapter" endpoints="default" id="${server}.IceGauntletAuthAdapter">
+            <distrib icepatch="${application}.IcePatch2/server"/>
+            <adapter name="IceGauntletAuthAdapter" endpoints="tcp" id="${server}.IceGauntletAuthAdapter" replica-group="ReplicatedAuthAdapter">
                <object identity="auth${index}" type="::Example::IceGauntletApp" property="identity"/>
             </adapter>
          </server>
@@ -112,10 +113,11 @@
                <property name="Ice.StdOut" value="${application.distrib}/server-out.txt"/>
                <property name="Ice.ProgramName" value="${server}.RoomManager${index}"/>
                <property name="IcePatch2.Directory" value="/tmp/icegauntlet"/>
-               <property name="Identity" value="roommanager"/>
+               <property name="Identity" value="room_manager"/>
             </properties>
-            <adapter name="RoomManagerAdapter" endpoints="default" id="${server}.RoomManagerAdapter">
-               <object identity="roommanager${index}" type="::Example::IceGauntletApp" property="identity"/>
+            <distrib icepatch="${application}.IcePatch2/server"/>
+            <adapter name="RoomManagerAdapter" endpoints="tcp" id="${server}.RoomManagerAdapter" replica-group="ReplicatedRoomManagerAdapter">
+               <object identity="room_manager${index}" type="::Icegauntlet::RoomManager" property="identity"/>
             </adapter>
          </server>
       </server-template>
@@ -125,10 +127,14 @@
       </replica-group>
       <replica-group id="ReplicatedRoomManagerAdapter">
          <load-balancing type="random" n-replicas="0"/>
-         <object identity="roommanager" type="::Exmaple::IceGauntlet"/>
+         <object identity="room_manager" type="::IceGauntlet::RoomManager"/>
       </replica-group>
       <node name="node1">
          <server-instance template="IceGauntletAuthTemplate" index="1"/>
+         <server-instance template="IcePatch2" directory="/tmp/icegauntlet"/>
+         <server-instance template="IceStorm" topic-manager-endpoints="tcp -p 10000" publish-endpoints="tcp -p 2000">
+            <properties service="IceGauntletApp.IceStorm"/>
+         </server-instance>
          <server-instance template="RoomManagerTemplate" index="1"/>
       </node>
       <node name="node2">
