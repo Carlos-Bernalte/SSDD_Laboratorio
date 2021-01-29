@@ -19,6 +19,8 @@ import IceGauntlet
 
 DIR_MAPAS="./Servers/server_maps/"
 DIR_DATA="./Servers/data.json"
+
+
 class RoomManagment(IceGauntlet.RoomManager):
     """Incluye los métodos necesarios para poder publicar y eliminar un mapa"""
 
@@ -157,9 +159,10 @@ class RoomManagerSyncChannelI(IceGauntlet.RoomManagerSync, Ice.Application):
     def __init__(self):
         self.id=str(uuid.uuid4())
         self._topic_mgr = self.get_topic_manager()
-        self._topic = self.getTopic()
-        self._publisher = self.getPublisher()
-        self._Servers = [self.id]
+        self._topic = self.get_topic()
+        self._publisher = self.get_publisher()
+        self._Servers = {}
+        self.RoomManager=None
 
 
     def get_topic_manager(self): 
@@ -171,7 +174,7 @@ class RoomManagerSyncChannelI(IceGauntlet.RoomManagerSync, Ice.Application):
             return None
         return IceStorm.TopicManagerPrx.checkedCast(proxy)
 
-    def getTopic(self):
+    def get_topic(self):
         if not self._topic_mgr:
             print('Invalid proxy')
             return 2
@@ -181,30 +184,28 @@ class RoomManagerSyncChannelI(IceGauntlet.RoomManagerSync, Ice.Application):
             topic = self._topic_mgr.create("RoomManagerSyncChannel")
         return topic
 
-    def getPublisher(self):
+    def get_publisher(self):
         publisher = self._topic.getPublisher()
         return IceGauntlet.RoomManagerSyncPrx.uncheckedCast(publisher)
 
     def hello(self, manager, managerId,current=None):
         if managerId not in self._Servers:
-            self._Servers.append(managerId)
-            self._publisher.announce(manager, self.id)
+            self._Servers[managerId]=manager
+            if managerId != self.id:
+                print(">>",managerId,': Hola soy el nuevo')
+                manager.rmSync.announce(self.RoomManager, self.id)
 
     def announce(self, manager, managerId,current=None):
-        if managerId not in self._Servers:
-            self._Servers.append(managerId)
-        if managerId == self.id:
-            self._Servers.sort()
-            print("Lista de servidores de", self.id, ": ", self._Servers)
+        print('>>', managerId,': Bienvenido!!')
+        self._Servers[managerId]=manager
         
     def removedRoom():
         print("Removed room")
 
     def newRoom(self, name_room, managerId):
-        self.getPublisher().newRoom(name_room, managerId)
         print("new Room ")
 
-    
+
 class DungeonI(IceGauntlet.Dungeon):
     """Clase referente a la accion de obtener un mapa"""
 
@@ -213,7 +214,6 @@ class DungeonI(IceGauntlet.Dungeon):
         if not self.auth_server:
             raise RuntimeError('Invalid proxy for authentification server')
 
-    
 
 class Server(Ice.Application):
     """
@@ -222,7 +222,7 @@ class Server(Ice.Application):
     """
 
     def run(self, argv):
-        topic_manager = self.get_topic_manager()
+       # topic_manager = self.get_topic_manager()
         broker = self.communicator()
         auth_server_proxy=argv[1]
         
@@ -237,34 +237,17 @@ class Server(Ice.Application):
 
         adapterrm.activate()
 
-        manager = IceGauntlet.RoomManagerPrx.uncheckedCast(proxyrm)
+        servantRoomSync.RoomManager = IceGauntlet.RoomManagerPrx.uncheckedCast(proxyrm)
         print('Proxy Room Manager', proxyrm)
         print('Proxy Sync:', proxySync)
         print('--------------------------------------------')
-        servantrm.rmSync._publisher.hello(manager, servantrm.rmSync.id)
-        qos={}
-        servantrm.rmSync._topic.subscribeAndGetPublisher(qos, proxySync)
+        
+        servantrm.rmSync._topic.subscribeAndGetPublisher({}, proxySync)
+        servantRoomSync._publisher.hello(servantRoomSync.RoomManager, servantrm.rmSync.id)
 
         self.shutdownOnInterrupt()
         broker.waitForShutdown()
         return 0
-
-    def get_topic_manager(self):
-        key = 'IceStorm.TopicManager.Proxy'
-        proxy = self.communicator().propertyToProxy(key)
-        if proxy is None:
-            print("property '{}' not set".format(key))
-            return None
-
-        return IceStorm.TopicManagerPrx.checkedCast(proxy)
-
-    def save_proxy(self, proxy, file_name=""):
-        """Funcion encargada de guardar el proxy en archivos con el nombre dado"""
-
-        fileproxy = open("proxys/"+file_name, "w")
-        fileproxy.write(str(proxy))
-        fileproxy.close()
-        print(proxy)
 
 
 server = Server()

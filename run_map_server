@@ -1,9 +1,4 @@
 #!/bin/bash
- 
-if [ -z "$1" ];
-then
-        python3 Servers/server.py --Ice.Config=Servers/server.conf "default -t -e 1.1:tcp -h pike.esi.uclm.es -p 6000 -t 60000"
-else
-        python3 Servers/server.py --Ice.Config=Servers/server.conf "$1"
-fi
+python3 Servers/server.py --Ice.Config=Servers/server.conf "$1"
+
 
