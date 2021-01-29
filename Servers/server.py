@@ -159,10 +159,16 @@ class RoomManagerSyncChannelI(IceGauntlet.RoomManagerSync, Ice.Application):
     def __init__(self):
         self.id=str(uuid.uuid4())
         self._topic_mgr = self.get_topic_manager()
+<<<<<<< HEAD
         self._topic = self.get_topic()
         self._publisher = self.get_publisher()
         self._Servers = {}
         self.RoomManager=None
+=======
+        self._topic = self.getTopic()
+        self._publisher = self.getPublisher()
+        self._Servers = []
+>>>>>>> 4b761815c31647ad0cd83b169665e453fd91aa9e
 
 
     def get_topic_manager(self): 
@@ -190,6 +196,7 @@ class RoomManagerSyncChannelI(IceGauntlet.RoomManagerSync, Ice.Application):
 
     def hello(self, manager, managerId,current=None):
         if managerId not in self._Servers:
+<<<<<<< HEAD
             self._Servers[managerId]=manager
             if managerId != self.id:
                 print(">>",managerId,': Hola soy el nuevo')
@@ -198,6 +205,18 @@ class RoomManagerSyncChannelI(IceGauntlet.RoomManagerSync, Ice.Application):
     def announce(self, manager, managerId,current=None):
         print('>>', managerId,': Bienvenido!!')
         self._Servers[managerId]=manager
+=======
+            print(">>",managerId,': Hola soy el nuevo')
+            self._Servers.append(managerId)
+        self._publisher.announce(manager, self.id)
+        print(self._Servers)
+    def announce(self, manager, managerId,current=None):
+        if managerId not in self._Servers:
+            self._publisher.hello(manager, managerId)
+            print('>>', managerId,': Hola a todo el mundo')
+            self._Servers.append(managerId) 
+        print(self._Servers)
+>>>>>>> 4b761815c31647ad0cd83b169665e453fd91aa9e
         
     def removedRoom():
         print("Removed room")
@@ -241,14 +260,33 @@ class Server(Ice.Application):
         print('Proxy Room Manager', proxyrm)
         print('Proxy Sync:', proxySync)
         print('--------------------------------------------')
+<<<<<<< HEAD
         
         servantrm.rmSync._topic.subscribeAndGetPublisher({}, proxySync)
         servantRoomSync._publisher.hello(servantRoomSync.RoomManager, servantrm.rmSync.id)
+=======
+        servantrm.rmSync.hello(manager, servantrm.rmSync.id)
+        servantrm.rmSync.newRoom("hola", servantrm.rmSync.id)
+        qos={}
+        servantrm.rmSync._topic.subscribeAndGetPublisher(qos, proxySync)
+>>>>>>> 4b761815c31647ad0cd83b169665e453fd91aa9e
+
 
         self.shutdownOnInterrupt()
         broker.waitForShutdown()
         return 0
 
+<<<<<<< HEAD
+=======
+    def save_proxy(self, proxy, file_name=""):
+        """Funcion encargada de guardar el proxy en archivos con el nombre dado"""
+
+        fileproxy = open("proxys/"+file_name, "w")
+        fileproxy.write(str(proxy))
+        fileproxy.close()
+        print(proxy)
+
+>>>>>>> 4b761815c31647ad0cd83b169665e453fd91aa9e
 
 server = Server()
 sys.exit(server.main(sys.argv))

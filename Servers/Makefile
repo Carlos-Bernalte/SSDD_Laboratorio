@@ -23,6 +23,7 @@ run-node2: /tmp/db/node2/servers
 
 app-workspace: /tmp/icegauntlet
 	cp icegauntlet.ice server.py /tmp/icegauntlet
+	cp icegauntlet.ice auth_server /tmp/icegauntlet
 	icepatch2calc /tmp/icegauntlet
 
 /tmp/%:
