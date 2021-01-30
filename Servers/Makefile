@@ -22,8 +22,17 @@ run-node2: /tmp/db/node2/servers
 	#./Client.py --Ice.Config=locator.config "printer1 -t -e 1.1 @ PrinterServer$(SERVER).PrinterAdapter"
 
 app-workspace: /tmp/icegauntlet
-	cp icegauntlet.ice server.py /tmp/icegauntlet
-	cp icegauntlet.ice auth_server /tmp/icegauntlet
+	cp server.py /tmp/icegauntlet
+	cp server.conf /tmp/icegauntlet
+	cp auth_server /tmp/icegauntlet
+	cp auth_server.conf /tmp/icegauntlet
+	cp reload_users /tmp/icegauntlet
+	cp users.json /tmp/icegauntlet
+	cp auth_server /tmp/icegauntlet
+	cp -r server_maps /tmp/icegauntlet
+	cp data.json /tmp/icegauntlet
+	cp icegauntlet.ice /tmp/icegauntlet
+
 	icepatch2calc /tmp/icegauntlet
 
 /tmp/%:
