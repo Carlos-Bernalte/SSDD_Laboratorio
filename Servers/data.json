@@ -1,12 +1,1 @@
-{
-    "Autores": {
-        "juan": {
-            "maps": []
-        },
-        "": {
-            "maps": [
-                "CortoPeroIntenso"
-            ]
-        }
-    }
-}
+{"juan": {"maps": []}, "carlos": {"maps": []}, "juliomd20": {"maps": ["RobotTravieso", "CortoPeroIntenso"]}}

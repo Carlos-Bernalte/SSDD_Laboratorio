@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """El modulo client_room_managment.py incorpora los metodos necesarios para
 publicar y borrar un mapa en el servidor"""
+from logging import exception
 import sys
 #pylint: disable=E0401
 #pylint: disable=C0413
@@ -10,16 +11,16 @@ Ice.loadSlice('icegauntlet.ice')
 import IceGauntlet
 #pylint: enable=E0401
 #pylint: enable=C0413
-
+DIR_MAPAS="icegauntlet/editor/maps/"
 class Client(Ice.Application):
     """Se conecta con el servidor y contiene los métodos para publicar
     y borrar un mapa del servidor"""
     def publish_map(self, token="", map_name=""):
         """Publica un mapa en el servidor"""
         try:
-            new_room=open("icegauntlet/editor/maps/"+map_name, "r")
-            self.room.publish(token,new_room.read())
-            new_room.close()
+            with open (DIR_MAPAS+map_name,'r') as file:
+                self.room.publish(token,file.read())
+
         except IceGauntlet.WrongRoomFormat:
             print("Formato mapa incorrecto")
         except IceGauntlet.Unauthorized:
@@ -40,7 +41,6 @@ class Client(Ice.Application):
             print("El mapa que se esta intentando borrar no existe")
 
     def run(self, argv):
-
         if len(argv) == 5:
             proxy = self.communicator().stringToProxy(argv[2])
             self.room = IceGauntlet.RoomManagerPrx.checkedCast(proxy)
@@ -53,7 +53,6 @@ class Client(Ice.Application):
             else:
                 print("Opción no disponible.")
                 return 1
-
         return 0
 
 sys.exit(Client().main(sys.argv))

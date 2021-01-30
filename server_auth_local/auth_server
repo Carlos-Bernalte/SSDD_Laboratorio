@@ -23,7 +23,7 @@ Ice.loadSlice('icegauntlet.ice')
 import IceGauntlet
 
 
-USERS_FILE = 'Servers/users.json'
+USERS_FILE = 'server_auth_local/users.json'
 PASSWORD_HASH = 'password_hash'
 CURRENT_TOKEN = 'current_token'
 TOKEN_SIZE = 40
@@ -50,6 +50,7 @@ class AuthenticationI(IceGauntlet.Authentication):
         with open(USERS_FILE, 'r') as contents:
             self._users_ = json.load(contents)
         self._active_tokens_ = set([user.get(CURRENT_TOKEN, None) for user in self._users_.values()])
+        print(self._active_tokens_)
 
     def __commit__(self):
         logging.debug('User database updated!')

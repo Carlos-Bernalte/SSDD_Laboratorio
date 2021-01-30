@@ -2,65 +2,37 @@
 y los guarda en archivos .out. Tambien incorpora las clases y metodos necesarios para
 que el cliente pueda jugar un mapa, publicarlo y borrarlo (en caso de que dicho cliente
 sea su propietario). Tambien controla expceciones"""
+import IceGauntlet
 import os
 import json
+from posix import listdir
 import random
 import sys
-from os import remove
+from os import name, remove
 import uuid
 #pylint: disable=E0401
 #pylint: disable=C0413
 import Ice
 import IceStorm
 Ice.loadSlice('icegauntlet.ice')
-import IceGauntlet
 #pylint: enable=E0401
 #pylint: enable=C0413
 
-DIR_MAPAS="./Servers/server_maps/"
-DIR_DATA="./Servers/data.json"
+DIR_MAPAS = "./Servers/server_maps/"
+DIR_DATA = "./Servers/data.json"
 
 
 class RoomManagment(IceGauntlet.RoomManager):
     """Incluye los métodos necesarios para poder publicar y eliminar un mapa"""
 
-    j = {"Autores":{}}
-    if os.stat(DIR_DATA).st_size==0:
-        with open(DIR_DATA, "w") as file:
-            json.dump(j,file)
-
-    def __init__(self, proxy_auth_server, serverSync):
-        self.id=str(uuid.uuid4())
-        self.auth_server = IceGauntlet.AuthenticationPrx.checkedCast(proxy_auth_server)
-        self.rmSync=serverSync
+    def __init__(self, proxy_auth_server, serverSync, almacenMapas):
+        self.auth_server = IceGauntlet.AuthenticationPrx.checkedCast(
+            proxy_auth_server)
         if not self.auth_server:
             raise RuntimeError('Invalid proxy for authentification server')
-
-    def autoria(self, autorDueno, level_searched):
-        """Método para controlar que el cliente esté autorizado"""
-
-        existe_level=False
-        existe_pertenece=False
-        with open(DIR_DATA, "r") as file:
-            j=json.load(file)
-
-        for autor in j["Autores"]:
-            for level in j["Autores"][autor]["maps"]:
-                if level_searched==level:
-                    existe_level=True
-
-        try:
-            #pylint: disable=W0104
-            j["Autores"][autorDueno]
-            #pylint: enable=W0104
-            for level in j["Autores"][autorDueno]["maps"]:
-                if level_searched==level:
-                    existe_pertenece = True
-
-        except KeyError:
-            print("Usuario publica por primera vez")
-
-        return existe_level, existe_pertenece
+        self.id = str(uuid.uuid4())
+        self.room_manager_sync = serverSync
+        self.almacen_mapas = almacenMapas
 
     def publish(self, token, room_data, current=None):
         """
@@ -68,51 +40,13 @@ class RoomManagment(IceGauntlet.RoomManager):
         Comprueba que el token del Cliente sea valido.
         Actualiza el registro de mapas de cada usuario.
         """
-        autor = ""
-        if not self.auth_server.getOwner(token):
-            raise IceGauntlet.Unauthorized
-	
-        try:
-            # pylint: disable=W0106
-            json.loads(room_data)["data"]
-            json.loads(room_data)["room"]
-            # pylint: enable=W0106
-        except KeyError:
-            raise IceGauntlet.WrongRoomFormat
-
-        existe_level, existe_pertenece = self.autoria(autor, json.loads(room_data)["room"])
-
-        if (not existe_pertenece and not existe_level) or existe_pertenece:
-            archivo = open(DIR_MAPAS+str(json.loads(room_data)["room"]), "w")
-            archivo.write(room_data)
-            archivo.close()
-        else:
-            raise IceGauntlet.RoomAlreadyExists
-
-        maps = []
-        existe = False
-        with open(DIR_DATA) as file:
-            j = json.load(file)
-
-        try:
-            j["Autores"][token]
-        except KeyError:
-            j["Autores"].update({"{}".format(autor):{"maps":maps}})
-            with open(DIR_DATA, "w") as file:
-                json.dump(j, file)
-
-        with open(DIR_DATA) as file:
-            j = json.load(file)
-
-        maps = j["Autores"][autor]["maps"]
-        for i in range(0,len(maps)):
-            if maps[i] ==  json.loads(room_data)["room"]:
-                existe = True
-        if not existe:
-            maps.append(json.loads(room_data)["room"])
-            j["Autores"].update({"{}".format(autor):{"maps":maps}})
-            with open(DIR_DATA, "w") as file:
-                json.dump(j, file)
+        room = json.loads(room_data)
+        usuario = self.auth_server.getOwner(token)
+        self.almacen_mapas.evaluar_autoria_publicar(usuario, room)
+        self.almacen_mapas.guardar_room(room)
+        self.almacen_mapas.guardar()
+        self.room_manager_sync._publisher.newRoom(
+            room['room'], self.room_manager_sync.id)
 
     def remove(self, token, room_name, current=None):
         """
@@ -123,52 +57,35 @@ class RoomManagment(IceGauntlet.RoomManager):
         mapa, en caso contrario, salta la excepcion Unauthorized
         Si el mapa no existe, salta la excepcion RoomNotExists
         """
-	
-        autor = self.auth_server.getOwner(token)
-        print("El autor de este mapa es: ",autor)
-        if not autor:
-            raise IceGauntlet.Unauthorized
+        user = self.auth_server.getOwner(token)
+        self.almacen_mapas.evaluar_autoria_eliminar(user, room_name)
+        remove(DIR_MAPAS+room_name)
+        self.almacen_mapas.guardar()
+        self.room_manager_sync._publisher.removedRoom(room_name)
 
-        existe_level, existe_pertenece = self.autoria(autor, room_name)
-
-        if not existe_level:
-            raise IceGauntlet.RoomNotExists
-
-        if not existe_pertenece:
-            raise IceGauntlet.Unauthorized
-
-        if existe_pertenece:
-            with open(DIR_DATA) as file:
-                j = json.load(file)
-            j["Autores"][autor]["maps"].remove(room_name)
-            with open(DIR_DATA, "w") as file:
-                json.dump(j, file)
-            remove(DIR_MAPAS+str(room_name))
-    
     def availableRooms(self, current=None):
-        return os.listdir(DIR_MAPAS)
+        return self.rooms
 
-    def getRoom(self, roomName='',current=None):
+    def getRoom(self, roomName='', current=None):
         """Devuelve un mapa"""
-        level= open(DIR_MAPAS+roomName, "r")
-        data=level.read()
+        level = open(DIR_MAPAS+roomName, "r")
+        data = level.read()
         level.close()
-        return data        
+        return data
+
 
 class RoomManagerSyncChannelI(IceGauntlet.RoomManagerSync, Ice.Application):
     def __init__(self):
-        self.id=str(uuid.uuid4())
+        self.id = str(uuid.uuid4())
         self._topic_mgr = self.get_topic_manager()
         self._topic = self.get_topic()
         self._publisher = self.get_publisher()
-        self._Servers = {}
-        self.RoomManager=None
+        self._pool_servers = {}
+        self.RoomManager = None
 
-
-    def get_topic_manager(self): 
+    def get_topic_manager(self):
         key = 'IceStorm.TopicManager.Proxy'
         proxy = self.communicator().propertyToProxy(key)
-        print(proxy)
         if proxy is None:
             print("property {} not set".format(key))
             return None
@@ -188,33 +105,117 @@ class RoomManagerSyncChannelI(IceGauntlet.RoomManagerSync, Ice.Application):
         publisher = self._topic.getPublisher()
         return IceGauntlet.RoomManagerSyncPrx.uncheckedCast(publisher)
 
-    def hello(self, manager, managerId,current=None):
-        if managerId not in self._Servers:
-            self._Servers[managerId]=manager
+    def hello(self, manager, managerId, current=None):
+        if managerId not in self._pool_servers:
+            self._pool_servers[managerId] = manager
             if managerId != self.id:
-                print(">>",managerId,': Hola soy el nuevo')
+                print(">>", managerId, ': Hola soy el nuevo')
                 self._publisher.announce(self.RoomManager, self.id)
 
-    def announce(self, manager, managerId,current=None):
-        print('>>', managerId,': Bienvenido!!')
-        self._Servers[managerId]=manager
-        
-    def removedRoom():
-        print("Removed room")
+    def announce(self, manager, managerId, current=None):
+        print('>>', managerId, ': Bienvenido!!')
+        self._pool_servers[managerId] = manager
+        self.dar_mapas()
 
-    def newRoom(self, name_room, managerId):
-        print("new Room ")
+    def removedRoom(self, roomName, current=None):
+        if roomName in listdir(DIR_MAPAS):
+            print(roomName, " eliminado de ", self.id)
+            remove(DIR_MAPAS+roomName)
+        print("Mapas restante: ", listdir(DIR_MAPAS))
+
+    def newRoom(self, name_room, managerId, current=None):
+        mapas_nuevos = []
+        if self.id != managerId:
+            print("New Room: ", name_room, " de parte de ", managerId)
+            if name_room not in listdir(DIR_MAPAS):
+                mapas_nuevos.append(name_room)
+
+    def dar_mapas(self):
+        for room in listdir(DIR_MAPAS):
+            self._publisher.newRoom(room, self.id)
 
 
-class DungeonI(IceGauntlet.Dungeon):
-    """Clase referente a la accion de obtener un mapa"""
+class RoomCoordinator():
+    def __init__(self):
+        self._available_rooms_ = os.listdir(DIR_MAPAS)
+        self._autores_ = json.load(open(DIR_DATA, 'r'))
 
-    def __init__(self, proxy_auth_server):
-        self.auth_server = IceGauntlet.AuthenticationPrx.checkedCast(proxy_auth_server)
-        if not self.auth_server:
-            raise RuntimeError('Invalid proxy for authentification server')
+    def evaluar_autoria_publicar(self, usuario, room):
 
-    
+        if not usuario:
+            raise IceGauntlet.Unauthorized
+        if not self.formato_room(room):
+            raise IceGauntlet.WrongRoomFormat
+
+        existe = self.existe_room(room['room'])
+        pertenece = self.pertenece_room(usuario, room['room'])
+        user = self.existe_usuario(usuario)
+        if existe and not pertenece:
+            raise IceGauntlet.RoomAlreadyExists
+        elif not existe and not pertenece and not user:
+            self._autores_[usuario] = {'maps': []}
+            self._autores_[usuario]["maps"].append(room['room'])
+        elif not existe and not pertenece and user:
+            self._autores_[usuario]["maps"].append(room['room'])
+
+    def evaluar_autoria_eliminar(self, usuario, room):
+        if not usuario:
+            raise IceGauntlet.Unauthorized
+        if not self.existe_room(room):
+            raise IceGauntlet.WrongRoomFormat
+
+        existe = self.existe_room(room)
+        pertenece = self.pertenece_room(usuario, room)
+
+        if existe and not pertenece:
+            raise IceGauntlet.RoomAlreadyExists
+        elif not existe:
+            raise IceGauntlet.RoomNotExists
+        elif existe and pertenece:
+            self._autores_[usuario]["maps"].remove(room)
+
+    def guardar_room(self, room):
+        with open(DIR_MAPAS+str(room['room']), 'w') as file:
+            json.dump(room, file)
+
+    def existe_room(self, room):
+        for autor in self._autores_:
+            for mapa in self._autores_[autor]['maps']:
+                if mapa == room:
+                    return True
+        return False
+
+    def existe_usuario(self, usuario):
+        try:
+            self._autores_[usuario]
+            return True
+        except KeyError:
+            return False
+
+    def pertenece_room(self, user, room):
+        try:
+            self._autores_[user]
+            for mapa in self._autores_[user]["maps"]:
+                if room == mapa:
+                    return True
+        except KeyError:
+            pass
+        return False
+
+    def formato_room(self, room_data):
+        try:
+            # pylint: disable=W0106
+            room_data["data"]
+            room_data["room"]
+            # pylint: enable=W0106
+        except KeyError:
+            return False
+        return True
+
+    def guardar(self):
+        with open(DIR_DATA, 'w') as file:
+            json.dump(self._autores_, file)
+
 
 class Server(Ice.Application):
     """
@@ -223,31 +224,36 @@ class Server(Ice.Application):
     """
 
     def run(self, argv):
-       # topic_manager = self.get_topic_manager()
         broker = self.communicator()
-        auth_server_proxy=argv[1]
-        
+        auth_server_proxy = argv[1]
+
         adapterrm = broker.createObjectAdapter("ServerAdapterRM")
 
-        servantRoomSync=RoomManagerSyncChannelI()
-        proxySync = adapterrm.add(servantRoomSync, broker.stringToIdentity(servantRoomSync.id))
+        servantRoomSync = RoomManagerSyncChannelI()
+        almacenRoom = RoomCoordinator()
+        servantrm = RoomManagment(broker.stringToProxy(
+            auth_server_proxy), servantRoomSync, almacenRoom)
 
-        servantrm = RoomManagment(broker.stringToProxy(auth_server_proxy),servantRoomSync)
-        proxyrm = adapterrm.add(servantrm, broker.stringToIdentity(servantrm.id))
+        proxySync = adapterrm.add(
+            servantRoomSync, broker.stringToIdentity(servantRoomSync.id))
+        proxyrm = adapterrm.add(
+            servantrm, broker.stringToIdentity(servantrm.id))
 
         adapterrm.activate()
 
-        servantRoomSync.RoomManager = IceGauntlet.RoomManagerPrx.uncheckedCast(proxyrm)
-        print('Proxy Room Manager', proxyrm)
-        print('Proxy Sync:', proxySync)
-        print('--------------------------------------------')
-        
-        servantrm.rmSync._topic.subscribeAndGetPublisher({}, proxySync)
-        servantRoomSync._publisher.hello(servantRoomSync.RoomManager, servantrm.rmSync.id)
+        servantRoomSync.RoomManager = IceGauntlet.RoomManagerPrx.uncheckedCast(
+            proxyrm)
+        print(proxyrm)
+
+        servantrm.room_manager_sync._topic.subscribeAndGetPublisher(
+            {}, proxySync)
+        servantRoomSync._publisher.hello(
+            servantRoomSync.RoomManager, servantrm.room_manager_sync.id)
 
         self.shutdownOnInterrupt()
         broker.waitForShutdown()
         return 0
+
 
 server = Server()
 sys.exit(server.main(sys.argv))
