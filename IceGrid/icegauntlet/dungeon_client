@@ -1,0 +1,86 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# pylint: disable=W1203
+
+'''
+    ICE Gauntlet LOCAL GAME
+'''
+
+import sys
+import atexit
+import logging
+import argparse
+import Ice
+Ice.loadSlice('icegauntlet.ice')
+import IceGauntlet
+import game
+import game.common
+import game.screens
+import game.pyxeltools
+import game.orchestration
+import random
+
+EXIT_OK = 0
+BAD_COMMAND_LINE = 1
+
+DEFAULT_ROOM = 'tutorial.json'
+DEFAULT_HERO = game.common.HEROES[0]
+
+
+@atexit.register
+# pylint: disable=W0613
+def bye(*args, **kwargs):
+    '''Exit callback, use for shoutdown'''
+    print('Thanks for playing!')
+# pylint: enable=W0613
+
+def parse_commandline(argv):
+    '''Parse and check commandline'''
+    argv=argv[1:]
+    parser = argparse.ArgumentParser('IceDungeon Remote Game')
+    parser.add_argument('--proxy',type=str,dest="proxy", help='Dungeon proxy')
+    parser.add_argument(
+        '-p', '--player', default=DEFAULT_HERO, choices=game.common.HEROES,
+        dest='hero', help='Hero to play with'
+    )
+    options = parser.parse_args(argv)
+    return options
+
+class Client(Ice.Application):
+    def run(self, argv):
+        user_options = parse_commandline(argv)
+        if not user_options:
+            return BAD_COMMAND_LINE
+        game.pyxeltools.initialize()
+        dungeon = DungeonMap(self.communicator().stringToProxy(user_options.proxy))
+        gauntlet = game.Game(user_options.hero, dungeon)
+        gauntlet.add_state(game.screens.TileScreen, game.common.INITIAL_SCREEN)
+        gauntlet.add_state(game.screens.StatsScreen, game.common.STATUS_SCREEN)
+        gauntlet.add_state(game.screens.GameScreen, game.common.GAME_SCREEN)
+        gauntlet.add_state(game.screens.GameOverScreen, game.common.GAME_OVER_SCREEN)
+        gauntlet.add_state(game.screens.GoodEndScreen, game.common.GOOD_END_SCREEN)
+        gauntlet.start()
+
+        return EXIT_OK
+class DungeonMap:
+    '''Store a list of rooms'''
+    def __init__(self, proxy):
+        self.game = IceGauntlet.RoomManagerPrx.checkedCast(proxy)
+        if not self.game:
+            raise RuntimeError('Invalid proxy')
+        self.finished=False
+        
+    @property
+    def next_room(self):
+        rooms=self.game.availableRooms()
+        index = random.randrange(0, len(rooms))
+        try:
+            data=self.game.getRoom(rooms[index])    
+        except IceGauntlet.RoomNotExists:
+            print("No hay mapas en el servidor")
+            self.finished=True
+            data=None
+        return data
+
+if __name__ == '__main__':
+    sys.exit(Client().main(sys.argv))

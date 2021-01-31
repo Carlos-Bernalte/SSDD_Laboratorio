@@ -1,0 +1,7 @@
+<<<<<<< HEAD
+set()
+default -t -e 1.1:tcp -h 192.168.1.35 -p 6000 -t 60000
+=======
+{'BIuWLQxnQCawucv4slWE5IlUnhrGO17m7U84bvoc', '      ', 'Y1DCNNnejzBBPamkmHpRIKYUNm8ZXzeR6rXpzzzz'}
+default -t -e 1.1:tcp -h 192.168.0.107 -p 6000 -t 60000
+>>>>>>> d3e5c84ba423e6e6fe1d07bcc00143fa778c13b4
