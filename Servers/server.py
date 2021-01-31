@@ -2,24 +2,26 @@
 y los guarda en archivos .out. Tambien incorpora las clases y metodos necesarios para
 que el cliente pueda jugar un mapa, publicarlo y borrarlo (en caso de que dicho cliente
 sea su propietario). Tambien controla expceciones"""
-import IceGauntlet
+
 import os
 import json
 from posix import listdir
 import random
 import sys
-from os import name, remove
+from os import remove, mkdir
+from shutil import rmtree
 import uuid
 #pylint: disable=E0401
 #pylint: disable=C0413
 import Ice
 import IceStorm
 Ice.loadSlice('icegauntlet.ice')
+import IceGauntlet
 #pylint: enable=E0401
 #pylint: enable=C0413
 
 DIR_MAPAS = "./Servers/server_maps/"
-DIR_DATA = "./Servers/data.json"
+DIR_DATA = ""
 
 
 class RoomManagment(IceGauntlet.RoomManager):
@@ -27,12 +29,13 @@ class RoomManagment(IceGauntlet.RoomManager):
 
     def __init__(self, proxy_auth_server, serverSync, almacenMapas):
         self.auth_server = IceGauntlet.AuthenticationPrx.checkedCast(
-            proxy_auth_server)
+            proxy_auth_server) 
         if not self.auth_server:
             raise RuntimeError('Invalid proxy for authentification server')
-        self.id = str(uuid.uuid4())
+        self._id_ = str(uuid.uuid4())
         self.room_manager_sync = serverSync
         self.almacen_mapas = almacenMapas
+        self.almacen_mapas.crear_dir(self._id_)
 
     def publish(self, token, room_data, current=None):
         """
@@ -45,8 +48,7 @@ class RoomManagment(IceGauntlet.RoomManager):
         self.almacen_mapas.evaluar_autoria_publicar(usuario, room)
         self.almacen_mapas.guardar_room(room)
         self.almacen_mapas.guardar()
-        self.room_manager_sync._publisher.newRoom(
-            room['room'], self.room_manager_sync.id)
+        self.room_manager_sync._publisher.newRoom(room['room'], self.room_manager_sync._id_)
 
     def remove(self, token, room_name, current=None):
         """
@@ -74,13 +76,13 @@ class RoomManagment(IceGauntlet.RoomManager):
         return data
 
 
-class RoomManagerSyncChannelI(IceGauntlet.RoomManagerSync, Ice.Application):
+class RoomManagerSyncChannelI(IceGauntlet.RoomManagerSync, Ice.Application, RoomManagment):
     def __init__(self):
-        self.id = str(uuid.uuid4())
+        self._id_ = str(uuid.uuid4())
         self._topic_mgr = self.get_topic_manager()
         self._topic = self.get_topic()
         self._publisher = self.get_publisher()
-        self._pool_servers = {}
+        self._pool_servers_ = {}
         self.RoomManager = None
 
     def get_topic_manager(self):
@@ -106,37 +108,47 @@ class RoomManagerSyncChannelI(IceGauntlet.RoomManagerSync, Ice.Application):
         return IceGauntlet.RoomManagerSyncPrx.uncheckedCast(publisher)
 
     def hello(self, manager, managerId, current=None):
-        if managerId not in self._pool_servers:
-            self._pool_servers[managerId] = manager
-            if managerId != self.id:
-                print(">>", managerId, ': Hola soy el nuevo')
-                self._publisher.announce(self.RoomManager, self.id)
+        if managerId not in self._pool_servers_:
+            self._pool_servers_[managerId] = {'manager':manager}
+            if managerId != self._id_:
+                print(">>", managerId, ': Hello!!')
+                self._publisher.announce(self.RoomManager, self._id_)
 
     def announce(self, manager, managerId, current=None):
-        print('>>', managerId, ': Bienvenido!!')
-        self._pool_servers[managerId] = manager
+        print('>>', managerId, ': Welcome, I am ', self._id_)
+        self._pool_servers_[managerId] = {'manager':manager}
         self.dar_mapas()
 
     def removedRoom(self, roomName, current=None):
+
         if roomName in listdir(DIR_MAPAS):
-            print(roomName, " eliminado de ", self.id)
+            print(roomName, " eliminado de ", self._id_)
             remove(DIR_MAPAS+roomName)
-        print("Mapas restante: ", listdir(DIR_MAPAS))
 
     def newRoom(self, name_room, managerId, current=None):
-        mapas_nuevos = []
-        if self.id != managerId:
-            print("New Room: ", name_room, " de parte de ", managerId)
+        if self._id_ != managerId:
             if name_room not in listdir(DIR_MAPAS):
-                mapas_nuevos.append(name_room)
-
+                if managerId in self._pool_servers_:
+                    print("New Room: ", name_room, " de parte de ", managerId)
+                    room=json.loads(self._pool_servers_[managerId]['manager'].getRoom(name_room))
+                    with open(DIR_MAPAS+str(room['room']), 'w') as file:
+                        json.dump(room, file)
+            
     def dar_mapas(self):
         for room in listdir(DIR_MAPAS):
-            self._publisher.newRoom(room, self.id)
+            self._publisher.newRoom(room, self._id_)
 
 
-class RoomCoordinator():
-    def __init__(self):
+class RoomCoordinator():      
+
+    def crear_dir(self,_id_):
+        global DIR_MAPAS
+        global DIR_DATA
+        DIR_MAPAS=DIR_MAPAS+'Server-'+_id_+'/'
+        mkdir(DIR_MAPAS)
+        DIR_DATA=DIR_MAPAS+'autores.json'
+        with open(DIR_DATA, 'w') as file:
+            json.dump({}, file)
         self._available_rooms_ = os.listdir(DIR_MAPAS)
         self._autores_ = json.load(open(DIR_DATA, 'r'))
 
@@ -231,29 +243,25 @@ class Server(Ice.Application):
 
         servantRoomSync = RoomManagerSyncChannelI()
         almacenRoom = RoomCoordinator()
-        servantrm = RoomManagment(broker.stringToProxy(
-            auth_server_proxy), servantRoomSync, almacenRoom)
-
-        proxySync = adapterrm.add(
-            servantRoomSync, broker.stringToIdentity(servantRoomSync.id))
-        proxyrm = adapterrm.add(
-            servantrm, broker.stringToIdentity(servantrm.id))
-
+        servantrm = RoomManagment(broker.stringToProxy(auth_server_proxy), servantRoomSync, almacenRoom)
+        
+        proxyrm = adapterrm.add(servantrm, broker.stringToIdentity(servantrm._id_))
+        proxySync = adapterrm.add(servantRoomSync, broker.stringToIdentity(servantRoomSync._id_))
+        
         adapterrm.activate()
 
-        servantRoomSync.RoomManager = IceGauntlet.RoomManagerPrx.uncheckedCast(
-            proxyrm)
+        servantRoomSync.RoomManager = IceGauntlet.RoomManagerPrx.checkedCast(proxyrm)
         print(proxyrm)
 
-        servantrm.room_manager_sync._topic.subscribeAndGetPublisher(
-            {}, proxySync)
-        servantRoomSync._publisher.hello(
-            servantRoomSync.RoomManager, servantrm.room_manager_sync.id)
+        servantrm.room_manager_sync._topic.subscribeAndGetPublisher({}, proxySync)
+        servantRoomSync._publisher.hello(servantRoomSync.RoomManager, servantrm.room_manager_sync._id_)
 
         self.shutdownOnInterrupt()
         broker.waitForShutdown()
         return 0
 
+if Server().main(sys.argv) == 0:
+    rmtree(DIR_MAPAS)
+    sys.exit()
 
-server = Server()
-sys.exit(server.main(sys.argv))
+
