@@ -19,17 +19,21 @@ Los mapas que se deseen subir al servidor se encuentran el la carpeta icegauntle
 ```
 Ejecución de servidor de mapas:
 ```sh
-./run_map_server.sh proxy_servicio_autentifición
+./run_map_server proxy_servicio_autentifición
 ```
 Ejecución del juego:
 ```sh
-./run_game.sh proxy_servicio_de_juego
+./run_game proxy_servicio_de_juego
 ```
 Ejecución de servidor de autentificación en local:
 ```sh
-./run_auth_server.sh
+./run_auth_server
 ```
 Ejecución del cliente de autentificación:
 ```sh
-./run_auth_client.sh
+./run_auth_client
+```
+Obtener un nuevo token:
+```sh
+./get_new_token usuario proxy_servidor_de_autentificación
 ```
