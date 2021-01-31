@@ -1,3 +1,7 @@
 #!/bin/bash
-#este scriptintentará  subir  un  nuevo  mapa. Los  argumentos  que  recibirá serán los siguientes: <proxy servicio mapas> <token> <archivo mapa>
-python3 Clients/client_room_managment.py -p "$1" $2 $3
+if [ $# -eq 3 ]; then
+    python3 Clients/client_room_managment.py -p "$1" $2 $3
+else
+    echo "Formato incorrecto. Por favor indique los valores correspondientes"
+    echo "./upload_map <proxy_servicio_de_mapas> <token> <nombre_del_mapa>"
+fi

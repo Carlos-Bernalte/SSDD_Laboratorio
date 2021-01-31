@@ -28,8 +28,7 @@ class RoomManagment(IceGauntlet.RoomManager):
     """Incluye los métodos necesarios para poder publicar y eliminar un mapa"""
 
     def __init__(self, proxy_auth_server, serverSync, almacenMapas):
-        self.auth_server = IceGauntlet.AuthenticationPrx.checkedCast(
-            proxy_auth_server) 
+        self.auth_server = IceGauntlet.AuthenticationPrx.checkedCast(proxy_auth_server)
         if not self.auth_server:
             raise RuntimeError('Invalid proxy for authentification server')
         self._id_ = str(uuid.uuid4())
@@ -244,7 +243,6 @@ class Server(Ice.Application):
         servantRoomSync = RoomManagerSyncChannelI()
         almacenRoom = RoomCoordinator()
         servantrm = RoomManagment(broker.stringToProxy(auth_server_proxy), servantRoomSync, almacenRoom)
-        
         proxyrm = adapterrm.add(servantrm, broker.stringToIdentity(servantrm._id_))
         proxySync = adapterrm.add(servantRoomSync, broker.stringToIdentity(servantRoomSync._id_))
         

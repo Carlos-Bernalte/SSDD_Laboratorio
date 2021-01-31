@@ -130,9 +130,6 @@ class Server(Ice.Application):
         adapter.activate()
         logging.debug('Adapter ready, servant proxy: {}'.format(proxy))
         print(proxy, flush=True)
-        proxy_salida = open("proxy_auth.out", "w")
-        proxy_salida.write(str(proxy))
-        proxy_salida.close()
 
         logging.debug('Entering server loop...')
         self.shutdownOnInterrupt()

@@ -1,2 +1,7 @@
 #!/bin/bash
-python3 Clients/client_autenticacion.py "$1"
+if [ $# -eq 1 ]; then  
+    python3 Clients/client_autenticacion.py "$1"
+else
+    echo "Por favor indique el porxy del servidor de autentificación"
+    echo "./run_auth_client <proxy_servicio_autentifición>"
+fi

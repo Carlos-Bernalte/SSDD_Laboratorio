@@ -1,2 +1,5 @@
 #!/bin/bash
-./icegauntlet/dungeon_client --proxy "$@"
+if [ $# -gt 1 ]; then
+    ./icegauntlet/dungeon_client --proxy "$@"
+else
+    echo "El primer argumento debe ser el proxy del servidor de mapas al que quieres acceder"

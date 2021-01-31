@@ -1,4 +1,8 @@
 #!/bin/bash
-python3 Servers/server.py --Ice.Config=Servers/server.conf "$1"
-
+if [ $# -eq 1 ]; then  
+    python3 Servers/server.py --Ice.Config=Servers/server.conf "$1"
+else
+    echo "Por favor indique el porxy del servidor de autentificación"
+    echo "./run_map_server <proxy_servicio_autentifición>"
+fi
 
