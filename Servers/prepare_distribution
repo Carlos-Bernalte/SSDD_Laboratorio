@@ -1,4 +1,0 @@
-#!/bin/bash
-cd ./IceGrid/Servers/
-make clean
-make run
